@@ -27,12 +27,11 @@ public class AudioPlayer {
      */
     public AudioPlayer(String path) {
         clip = AudioLoader.loadAudioClip(path);
-        gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-        if (clip.isControlSupported(Type.MASTER_GAIN)) {
-            FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+        if (clip != null && clip.isControlSupported(Type.MASTER_GAIN)) {
+            gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
             float range = gainControl.getMaximum() - gainControl.getMinimum();
             float gain = (range * AudioPlayer.volume) + gainControl.getMinimum();
-            volume.setValue(gain);
+            gainControl.setValue(gain);
         }
     }
 
@@ -40,11 +39,17 @@ public class AudioPlayer {
      * plays the selected audio once
      */
     public void playOnce() {
+        if (clip == null) {
+            return;
+        }
         clip.loop(0);
         playAudio();
     }
 
     void playAudio() {
+        if (clip == null) {
+            return;
+        }
         if (isSpatial) {
             if (clip.isControlSupported(FloatControl.Type.PAN)) {
                 FloatControl balance = (FloatControl) clip.getControl(FloatControl.Type.PAN);
@@ -61,9 +66,6 @@ public class AudioPlayer {
                     "NO PAN OR BALANCE SUPPORTED channels: " + clip.getFormat().getChannels());
             }
         }
-        if (clip == null) {
-            return;
-        }
         stop();
         clip.setFramePosition(0);
         if (!clip.isRunning()) {
@@ -75,7 +77,7 @@ public class AudioPlayer {
      * stops currently playing audio if clip.isRunning() returns true
      */
     public void stop() {
-        if (clip.isRunning()) {
+        if (clip != null && clip.isRunning()) {
             clip.stop();
         }
     }
@@ -84,6 +86,9 @@ public class AudioPlayer {
      * stops, drains then closes the selected audio-clip.
      */
     public void close() {
+        if (clip == null) {
+            return;
+        }
         stop();
         clip.drain();
         clip.close();
@@ -93,6 +98,9 @@ public class AudioPlayer {
      * sets LOOP_CONTINOUSLY to true and calls clip.PlayOce()
      */
     public void playLoop() {
+        if (clip == null) {
+            return;
+        }
         clip.loop(clip.LOOP_CONTINUOUSLY);
         playAudio();
     }
@@ -103,6 +111,9 @@ public class AudioPlayer {
      * @param volume decibel
      */
     public void setVolume(float volume) {
+        if (gainControl == null) {
+            return;
+        }
         float range = gainControl.getMaximum() - gainControl.getMinimum();
         float gain = (range * volume) + gainControl.getMinimum();
         gainControl.setValue(gain);
@@ -114,7 +125,7 @@ public class AudioPlayer {
      * @return true OR false
      */
     public boolean isRunning() {
-        return clip.isRunning();
+        return clip != null && clip.isRunning();
     }
 
     /**

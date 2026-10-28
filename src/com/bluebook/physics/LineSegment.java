@@ -1,7 +1,7 @@
 package com.bluebook.physics;
 
 import com.bluebook.util.Vec2;
-import com.sun.javafx.geom.Line2D;
+import java.awt.geom.Line2D;
 
 /**
  * This represent a segment of a line whitch is then used to calculate light
@@ -18,7 +18,7 @@ public class LineSegment {
      * @param line The line this object represent
      * @param source Relative object to be messarure against
      */
-    public LineSegment(Line2D line, Vec2 source) {
+    public LineSegment(Line2D.Float line, Vec2 source) {
         p1.position = new Vec2(line.x1, line.y1);
         p2.position = new Vec2(line.x2, line.y2);
         p1.segment = this;

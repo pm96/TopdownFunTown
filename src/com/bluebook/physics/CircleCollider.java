@@ -4,7 +4,7 @@ import com.bluebook.camera.OrthographicCamera;
 import com.bluebook.util.GameObject;
 import com.bluebook.util.GameSettings;
 import com.bluebook.util.Vec2;
-import com.sun.javafx.geom.Line2D;
+import java.awt.geom.Line2D;
 import javafx.geometry.Bounds;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
@@ -40,71 +40,65 @@ public class CircleCollider extends Collider {
 
     @Override
     protected void updateCenterPoint() {
-        synchronized (this) {
 
-        }
     }
 
     @Override
     public void debugDraw(GraphicsContext gc) {
-        synchronized (this) {
 
-            double offX = OrthographicCamera.main != null ? OrthographicCamera.main.getX() : 0.0;
-            double offY = OrthographicCamera.main != null ? OrthographicCamera.main.getY() : 0.0;
+        double offX = OrthographicCamera.main != null ? OrthographicCamera.main.getX() : 0.0;
+        double offY = OrthographicCamera.main != null ? OrthographicCamera.main.getY() : 0.0;
 
-            gc.setStroke(Color.GREEN);
-            gc.strokeArc(position.getX() + offX - radius, position.getY() + offY - radius,
-                radius * 2, radius * 2, 0, 360, ArcType.CHORD);
-            gc.setStroke(Color.TEAL);
-            Line2D[] lines = getLines();
-            for (Line2D line : lines) {
-                gc.strokeLine(line.x1, line.y1, line.x2, line.y2);
+        gc.setStroke(Color.GREEN);
+        gc.strokeArc(position.getX() + offX - radius, position.getY() + offY - radius,
+            radius * 2, radius * 2, 0, 360, ArcType.CHORD);
+        gc.setStroke(Color.TEAL);
+        Line2D.Float[] lines = getLines();
+        for (Line2D.Float line : lines) {
+            gc.strokeLine(line.x1, line.y1, line.x2, line.y2);
+        }
+
+        if (intersection != null) {
+            gc.setFill(Color.RED);
+            intersection.setFill(Color.RED);
+            Bounds b = intersection.getBoundsInParent();
+            gc.beginPath();
+
+            double centerX = b.getMinX() + (b.getMaxX() - b.getMinX()) / 2;
+            double centerY = b.getMinY() + (b.getMaxY() - b.getMinY()) / 2;
+            List<PathElement> elements = intersection.getElements();
+            for (PathElement pe : elements) {
+                if (pe.getClass() == MoveTo.class) {
+                    gc.moveTo(((MoveTo) pe).getX() + offX, ((MoveTo) pe).getY() + offY);
+                } else if (pe.getClass() == LineTo.class) {
+                    gc.lineTo(((LineTo) pe).getX() + offX, ((LineTo) pe).getY() + offY);
+                }
             }
 
-            if (intersection != null) {
-                gc.setFill(Color.RED);
-                intersection.setFill(Color.RED);
-                Bounds b = intersection.getBoundsInParent();
-                gc.beginPath();
+            gc.closePath();
+            gc.fill();
+            gc.stroke();
 
-                double centerX = b.getMinX() + (b.getMaxX() - b.getMinX()) / 2;
-                double centerY = b.getMinY() + (b.getMaxY() - b.getMinY()) / 2;
-                List<PathElement> elements = intersection.getElements();
-                for (PathElement pe : elements) {
-                    if (pe.getClass() == MoveTo.class) {
-                        gc.moveTo(((MoveTo) pe).getX() + offX, ((MoveTo) pe).getY() + offY);
-                    } else if (pe.getClass() == LineTo.class) {
-                        gc.lineTo(((LineTo) pe).getX() + offX, ((LineTo) pe).getY() + offY);
-                    }
-                }
-
-                gc.closePath();
-                gc.fill();
-                gc.stroke();
-
-                gc.setFill(Color.BLUE);
-                gc.fillRect(centerX + 2 + offX, centerY + 2 + offY, 4, 4);
+            gc.setFill(Color.BLUE);
+            gc.fillRect(centerX + 2 + offX, centerY + 2 + offY, 4, 4);
 //            gc.setFill(Color.GREEN);
 //            gc.fillRect(centerX - 25, centerY - 25,  50, 50);
-            }
         }
     }
 
     @Override
     void setIntersection(Path intersection) {
-        synchronized (this) {
-            this.intersection = intersection;
-            if (intersection != null) {
-                updateCenterPoint();
-            } else {
-                intersectionCenter = null;
-            }
+        this.intersection = intersection;
+        if (intersection != null) {
+            updateCenterPoint();
+        } else {
+            intersectionCenter = null;
         }
     }
 
     @Override
     public Rectangle getBoudningBox() {
-        return new Rectangle(position.getX() - radius, position.getY() - radius, radius, radius);
+        return new Rectangle(position.getX() - radius, position.getY() - radius, radius * 2, radius * 2);
     }
 
     @Override
@@ -128,7 +122,7 @@ public class CircleCollider extends Collider {
     }
 
     @Override
-    Line2D[] getLines() {
+    Line2D.Float[] getLines() {
 
         Vec2 pos = gameObject.getTransform().getGlobalPosition();
 
@@ -139,18 +133,18 @@ public class CircleCollider extends Collider {
                     (360 / lineResolution) * i);
         }
 
-        Line2D[] ret = new Line2D[lineResolution - 1];
+        Line2D.Float[] ret = new Line2D.Float[lineResolution - 1];
 
         for (int i = 0; i < ret.length; i++) {
             if (i != ret.length - 1) {
                 Vec2 start = circlePoints[i];
                 Vec2 dest = circlePoints[i + 1];
-                ret[i] = new Line2D((float) start.getX(), (float) start.getY(), (float) dest.getX(),
+                ret[i] = new Line2D.Float((float) start.getX(), (float) start.getY(), (float) dest.getX(),
                     (float) dest.getY());
             } else {
                 Vec2 start = circlePoints[i];
                 Vec2 dest = circlePoints[0];
-                ret[i] = new Line2D((float) start.getX(), (float) start.getY(), (float) dest.getX(),
+                ret[i] = new Line2D.Float((float) start.getX(), (float) start.getY(), (float) dest.getX(),
                     (float) dest.getY());
             }
 

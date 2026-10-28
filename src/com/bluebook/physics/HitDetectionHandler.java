@@ -1,10 +1,9 @@
 package com.bluebook.physics;
 
-import com.bluebook.camera.OrthographicCamera;
 import com.bluebook.util.GameSettings;
 import com.bluebook.util.Vec2;
 import com.rominntrenger.objects.player.Player;
-import com.sun.javafx.geom.Line2D;
+import java.awt.geom.Line2D;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
@@ -13,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class is called from {@link CollisionThread} and handles every instance of {@link
+ * This class is called once per frame from the game loop and handles every instance of {@link
  * BoxCollider}
  */
 public class HitDetectionHandler {
@@ -39,7 +38,7 @@ public class HitDetectionHandler {
     /**
      * List of lines from colliders used to calculate Visibility
      */
-    public ArrayList<Line2D> lines = new ArrayList<>();
+    public ArrayList<Line2D.Float> lines = new ArrayList<>();
 
     // And out buffers needed for thread safe operation
     private ArrayList<Collider> colliderInBuffer = new ArrayList<>();
@@ -52,7 +51,7 @@ public class HitDetectionHandler {
      * #hackerbois i'm in!
      * DO NOT REMOVE!
      */
-    private LineSegment ln = new LineSegment(new Line2D(0, 0, 1, 1), new Vec2(0, 0));
+    private LineSegment ln = new LineSegment(new Line2D.Float(0, 0, 1, 1), new Vec2(0, 0));
     private LinePointCompare lpc = new LinePointCompare();
     private LinePoint lp = new LinePoint();
 
@@ -75,6 +74,15 @@ public class HitDetectionHandler {
     /**
      * Will update position to all {@link Collider} relative to their attached {@link com.bluebook.util.GameObject}
      */
+    /**
+     * Moves the colliders to their objects, then checks for collisions and updates lights.
+     * Called once per frame from the game loop, after game logic
+     */
+    public void update() {
+        updatePositions();
+        lookForCollision();
+    }
+
     public void updatePositions() {
         for (Collider collider : colliders) {
             collider.getGameObject().setSize(collider.getGameObject().getScale());
@@ -83,11 +91,9 @@ public class HitDetectionHandler {
     }
 
     private void buildQuadTree() {
-        synchronized (this) {
-            qtTree.reset();
-            for (Collider c : colliders) {
-                qtTree.insert(c);
-            }
+        qtTree.reset();
+        for (Collider c : colliders) {
+            qtTree.insert(c);
         }
     }
 
@@ -129,78 +135,82 @@ public class HitDetectionHandler {
      * This will go over  all collision and raytracing looking for intersections
      */
     protected void lookForCollision() {
-        synchronized (this) {
 
-            lines.clear();
-            if (USE_QUADTREE)
-                buildQuadTree();
+        lines.clear();
+        if (USE_QUADTREE)
+            buildQuadTree();
 
-            for (Collider base : colliders) {
-                checkCollision(base);
+        Vec2 screen = GameSettings.getScreen();
 
-                if (DO_RAYCAST && !(base.getGameObject() instanceof Player) && base.interactionLayer.contains("Obscure")) {
-                    Line2D[] baseLines = base.getLines();
-                    for (Line2D l : baseLines)
+        for (Collider base : colliders) {
+            checkCollision(base);
+
+            if (DO_RAYCAST && !(base.getGameObject() instanceof Player) && base.interactionLayer.contains("Obscure")) {
+                Line2D.Float[] baseLines = base.getLines();
+                for (Line2D.Float l : baseLines) {
+                    // Lines are in screen coordinates. Lights are only drawn on screen, and a wall
+                    // outside the screen can't shadow anything on it, so those are skipped
+                    if (l.intersects(-SCREEN_MARGIN, -SCREEN_MARGIN,
+                        screen.getX() + 2 * SCREEN_MARGIN, screen.getY() + 2 * SCREEN_MARGIN)) {
                         lines.add(l);
-
-
+                    }
                 }
+
+
             }
-
-            if (DO_RAYCAST)
-                doRaycasts();
-
-            moveBuffer();
         }
+
+        if (DO_RAYCAST)
+            doRaycasts();
+
+        moveBuffer();
     }
 
     public static int counter = 0;
 
+    /**
+     * How far outside the screen walls are still included when calculating lights
+     */
+    private static final float SCREEN_MARGIN = 64;
+
     private void doRaycasts() {
-        synchronized (this) {
-            List<Light2D> lights = Light2D.lights;
-            for (Light2D light : lights)
-                if (DO_SHADOW_SWEEP) {
-                    Vec2 cam = OrthographicCamera.getOffset();
-                    Vec2 screen = GameSettings.getScreen();
+        List<Light2D> lights = Light2D.lights;
+        for (Light2D light : lights)
+            if (DO_SHADOW_SWEEP) {
+                // The edges of the screen bound the light where no wall is in the way
+                Vec2 screen = GameSettings.getScreen();
 
-                    float LeftX = (float) cam.getX();
-                    float TopY = (float) cam.getY();
-                    float RightX = (float) (cam.getX() - screen.getX());
-                    float BottomY = (float) (cam.getY() - screen.getY());
+                float LeftX = -SCREEN_MARGIN;
+                float TopY = -SCREEN_MARGIN;
+                float RightX = (float) screen.getX() + SCREEN_MARGIN;
+                float BottomY = (float) screen.getY() + SCREEN_MARGIN;
 
-                    lines.add(new Line2D(LeftX, TopY, RightX, TopY));
-                    lines.add(new Line2D(RightX, TopY, RightX, BottomY));
-                    lines.add(new Line2D(RightX, BottomY, LeftX, BottomY));
-                    lines.add(new Line2D(LeftX, BottomY, LeftX, TopY));
+                lines.add(new Line2D.Float(LeftX, TopY, RightX, TopY));
+                lines.add(new Line2D.Float(RightX, TopY, RightX, BottomY));
+                lines.add(new Line2D.Float(RightX, BottomY, LeftX, BottomY));
+                lines.add(new Line2D.Float(LeftX, BottomY, LeftX, TopY));
 
-                    Vec2 source = light.source.getTransform().getGlobalPosition();
+                Vec2 source = light.source.getTransform().getGlobalPosition();
 
-                    ArrayList<LineSegment> lineSegments = new ArrayList<>();
-                    lines.forEach(l -> lineSegments.add(new LineSegment(l, source)));
+                ArrayList<LineSegment> lineSegments = new ArrayList<>();
+                lines.forEach(l -> lineSegments.add(new LineSegment(l, source)));
 
-                    try {
-                        light.calculateVisibility(lineSegments);
-                    } catch (IllegalArgumentException e) {
-                        System.out.println("IllegalArgumentException");
-                    }
+                try {
+                    light.calculateVisibility(lineSegments);
+                } catch (IllegalArgumentException e) {
+                    System.out.println("IllegalArgumentException");
                 }
-        }
+            }
     }
 
     private void moveBuffer() {
-        synchronized (colliderInBuffer) {
-            colliders.addAll(colliderInBuffer);
-            colliderInBuffer.clear();
+        colliders.addAll(colliderInBuffer);
+        colliderInBuffer.clear();
+        // Remove
+        for (Collider c : colliderOutBuffer) {
+            colliders.remove(c);
         }
-        synchronized (colliderOutBuffer) {
-            // Remove
-            for (Collider c : colliderOutBuffer) {
-                colliders.remove(c);
-            }
-            colliderOutBuffer.clear();
-
-        }
+        colliderOutBuffer.clear();
     }
 
     /**
@@ -209,9 +219,7 @@ public class HitDetectionHandler {
      * @param collider {@link Collider}  to be added
      */
     protected void addCollider(Collider collider) {
-        synchronized (colliderInBuffer) {
-            colliderInBuffer.add(collider);
-        }
+        colliderInBuffer.add(collider);
     }
 
     /**
@@ -220,9 +228,7 @@ public class HitDetectionHandler {
      * @param collider {@link Collider} to be removed
      */
     protected void removeCollider(Collider collider) {
-        synchronized (colliderOutBuffer) {
-            colliderOutBuffer.add(collider);
-        }
+        colliderOutBuffer.add(collider);
     }
 
 

@@ -1,8 +1,6 @@
 package com.rominntrenger.objects.weapon;
 
-import java.io.Serializable;
-
-public class WeaponBase implements Serializable {
+public class WeaponBase {
 
     public char character = 'N';
 

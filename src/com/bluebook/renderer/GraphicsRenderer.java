@@ -3,7 +3,7 @@ package com.bluebook.renderer;
 import com.bluebook.camera.OrthographicCamera;
 import com.bluebook.util.GameSettings;
 import com.bluebook.util.Vec2;
-import com.sun.javafx.geom.Line2D;
+import java.awt.geom.Line2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
@@ -113,7 +113,7 @@ public class GraphicsRenderer {
             dest.getY() + yOff);
     }
 
-    public void strokeLine(Line2D line) {
+    public void strokeLine(Line2D.Float line) {
         double xOff = OrthographicCamera.main == null ? 0 : OrthographicCamera.main.getX();
         double yOff = OrthographicCamera.main == null ? 0 : OrthographicCamera.main.getY();
 

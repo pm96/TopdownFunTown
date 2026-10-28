@@ -15,74 +15,38 @@ import com.rominntrenger.stateHandling.DAO.PlayerDAO;
 import com.rominntrenger.stateHandling.DAO.WeaponDAO;
 import javafx.scene.paint.Color;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 
 public class SaveStateLoader {
 
-    public static MetaDAO load() throws IOException, ClassNotFoundException {
-        FileInputStream fileIn = new FileInputStream("./myFile.data");
-        ObjectInputStream in = new ObjectInputStream(fileIn);
-        return (MetaDAO) in.readObject();
-    }
-
-    public static MetaDAO loadFromFile(File file) throws IOException, ClassNotFoundException {
-        FileInputStream fileIn = new FileInputStream(file);
-        ObjectInputStream in = new ObjectInputStream(fileIn);
-        return (MetaDAO) in.readObject();
-    }
-    public static void loadPreviousSave(RomInntrenger rom, File f) {
-        GameEngine.getInstance().pauseGame();
-        MetaDAO meta = null;
-        try {
-            meta = loadFromFile(f);
-        } catch (IOException e) {
-            e.printStackTrace();
-            GameEngine.getInstance().resumeGame();
-            MessageHandler.getInstance().writeMessage("There was a problem locating the saveFile\n Will create a new save");
-            SaveStateSaver.save(rom);
-            return;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            GameEngine.getInstance().resumeGame();
-            MessageHandler.getInstance().writeMessage("There was a problem loading the saveFile\n Will create a new save");
-            SaveStateSaver.save(rom);
-            return;
-        }
-
-        rom.clearGameState();
-        loadPlayers(rom, meta);
-        WaveManager.getInstance().setWaveNumber(meta.waveManager.waveNumber);
-
-        OrthographicCamera.main.moveToFollow();
-
-        GameEngine.getInstance().resumeGame();
-        MessageHandler.getInstance().writeMessage("Load Complete");
-    }
-
+    /**
+     * Loads the save made automatically each wave (or with the save key)
+     */
     public static void loadPreviousSave(RomInntrenger rom) {
+        loadPreviousSave(rom, SaveFile.DEFAULT);
+    }
 
-        GameEngine.getInstance().pauseGame();
-
-        MetaDAO meta = null;
+    public static void loadPreviousSave(RomInntrenger rom, Path file) {
+        MetaDAO meta;
         try {
-            meta = load();
-        } catch (IOException e) {
-            e.printStackTrace();
-            GameEngine.getInstance().resumeGame();
-            MessageHandler.getInstance().writeMessage("There was a problem locating the saveFile\n Will create a new save");
+            meta = SaveFile.read(file);
+        } catch (NoSuchFileException e) {
+            MessageHandler.getInstance().writeMessage("There is no save yet\n Will create a new save");
             SaveStateSaver.save(rom);
             return;
-        } catch (ClassNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-            GameEngine.getInstance().resumeGame();
-            MessageHandler.getInstance().writeMessage("There was a problem loading the saveFile\n Will create a new save");
-            SaveStateSaver.save(rom);
+            MessageHandler.getInstance().writeMessage("Could not read the save file");
+            return;
+        } catch (SaveFile.InvalidSaveException e) {
+            // Keep the file as it is, so nothing is overwritten by mistake
+            MessageHandler.getInstance().writeMessage(e.getMessage());
             return;
         }
 
+        GameEngine.getInstance().pauseGame();
         rom.clearGameState();
         loadPlayers(rom, meta);
         WaveManager.getInstance().setWaveNumber(meta.waveManager.waveNumber);
@@ -91,7 +55,6 @@ public class SaveStateLoader {
 
         GameEngine.getInstance().resumeGame();
         MessageHandler.getInstance().writeMessage("Load Complete");
-
     }
 
     private static void loadPlayers(RomInntrenger rom, MetaDAO meta) {
@@ -129,7 +92,7 @@ public class SaveStateLoader {
         ret.setAmmoRemaining(w.ammoRemaining);
         ret.setProjectilePath(w.projectilePath);
         ret.setShootInterval(w.shootInterval);
-        ret.setPreviousShotTime(w.previousShotTime);
+        // previousShotTime is not restored: game time starts over when the game is started again
         ret.setWeaponClip(w.weaponClip);
         ret.setWeaponBarrel(w.weaponBarrel);
         ret.setWeaponBase(w.weaponBase);

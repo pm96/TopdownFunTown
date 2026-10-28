@@ -20,7 +20,7 @@ public class AudioLoader {
     /**
      * loads audio-file through the spritePath specified to the function by the use of a clip.
      *
-     * @return clip
+     * @return clip, or null if the audio could not be loaded (e.g. no audio device available)
      */
     public static Clip loadAudioClip(String path) {
         if (!audioClips.containsKey(path)) {
@@ -37,8 +37,12 @@ public class AudioLoader {
                 clip.open(audioIn);
 
                 audioClips.put(path, clip);
-            } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-                e.printStackTrace();
+            } catch (UnsupportedAudioFileException | IOException | LineUnavailableException
+                | IllegalArgumentException e) {
+                // IllegalArgumentException is thrown when no audio device can play the clip
+                System.err.println("Could not load audio '" + path + "': " + e.getMessage());
+                // Cache the failure so we don't retry (and log) every time the clip is requested
+                audioClips.put(path, null);
             }
         }
         return audioClips.get(path);

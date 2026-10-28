@@ -3,8 +3,8 @@ package com.rominntrenger.gui;
 import com.bluebook.audio.AudioPlayer;
 import com.bluebook.engine.GameApplication;
 import com.rominntrenger.main.RomInntrenger;
+import com.rominntrenger.stateHandling.SaveFile;
 import com.rominntrenger.stateHandling.SaveStateLoader;
-import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Parent;
@@ -72,26 +72,30 @@ import java.io.IOException;
     }
 
     /**
+     * Leaves the menu and starts the game, or resumes it if it has already started
+     */
+    void startOrResumeGame() {
+        try {
+            GameApplication.getInstance().callGame(primaryStage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Adds buttons to the menus created by the constructor in {@link GameMenu}
      */
     private void addButton() {
         ap = new AudioPlayer("audio/MoodyLoop.wav");
 
         resumeButton = new MenuButton("START/RESUME");
-        resumeButton.setOnMouseClicked(event -> {
-            FadeTransition fadeTransition = new FadeTransition(Duration.seconds(0.5), this);
-            fadeTransition.setFromValue(1);
-            fadeTransition.setToValue(0);
-            fadeTransition.setOnFinished(evt -> setVisible(false));
-            fadeTransition.play();
-           try {
-                GameApplication.getInstance().callGame(primaryStage);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        resumeButton.setOnMouseClicked(event -> startOrResumeGame());
 
         restartButton = new MenuButton("RESTART");
+        restartButton.setOnMouseClicked(event -> {
+            startOrResumeGame();
+            ((RomInntrenger) GameApplication.getInstance()).restartGame();
+        });
 
         optionsButton = new MenuButton("OPTIONS");
         optionsButton.setOnMouseClicked(event -> {
@@ -116,8 +120,12 @@ import java.io.IOException;
         loadFromFile.setOnMouseClicked(event -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Select saved file");
+            File saveFolder = SaveFile.DEFAULT.getParent().toFile();
+            if (saveFolder.isDirectory()) {
+                fileChooser.setInitialDirectory(saveFolder);
+            }
             fileChooser.getExtensionFilters().addAll(
-                new ExtensionFilter("Data files", "*.data", "*.txt"),
+                new ExtensionFilter("Save files", "*.json"),
                 new ExtensionFilter("All files", "*.*"));
             File selectedFile = fileChooser.showOpenDialog(primaryStage);
             if(selectedFile != null){
@@ -126,7 +134,7 @@ import java.io.IOException;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                SaveStateLoader.loadPreviousSave((RomInntrenger)GameApplication.getInstance(), selectedFile);
+                SaveStateLoader.loadPreviousSave((RomInntrenger)GameApplication.getInstance(), selectedFile.toPath());
                 System.out.println("LOADING");
 
 
@@ -194,7 +202,7 @@ import java.io.IOException;
         gainControl = ap.getGainControl();
         soundSlider.valueProperty().addListener((ObservableValue<? extends Number> ov, Number old_val,
                                                  Number new_val) -> {
-            if (clip.isControlSupported(Type.MASTER_GAIN)) {
+            if (clip != null && clip.isControlSupported(Type.MASTER_GAIN)) {
                 FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
                 float range = gainControl.getMaximum() - gainControl.getMinimum();
                 float gain = (range * (float) soundSlider.getValue()) + gainControl.getMinimum();
@@ -203,7 +211,7 @@ import java.io.IOException;
             soundValue.setText(((int) ((double) new_val * 100)) + "");
         });
 
-        menu0.getChildren().addAll(resumeButton, loadFromFile, optionsButton, exitButton);
+        menu0.getChildren().addAll(resumeButton, restartButton, loadFromFile, optionsButton, exitButton);
         menu1.getChildren().addAll(backButtonMainMenu, soundButton);
         volDisplay.getChildren().addAll(soundCaption, soundSlider, soundValue);
         menu2.getChildren().addAll(backButtonSoundMenu, volDisplay);

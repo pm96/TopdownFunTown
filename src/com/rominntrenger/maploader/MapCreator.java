@@ -10,6 +10,7 @@ import com.bluebook.util.Vec2;
 import com.rominntrenger.objects.AlienHive;
 import com.rominntrenger.objects.PlayerSpawn;
 import com.rominntrenger.objects.blocks.Wall;
+import com.rominntrenger.objects.blocks.WallCollider;
 import com.rominntrenger.objects.enemy.AlienExplode;
 import com.rominntrenger.objects.enemy.AlienGreen;
 import com.rominntrenger.objects.enemy.AlienPurple;
@@ -131,6 +132,29 @@ public class MapCreator extends GameObject {
                 }
 
             }
+        }
+
+        createWallColliders();
+    }
+
+    /**
+     * Gives each rectangle of walls one collider, see {@link WallRectangles}
+     */
+    private void createWallColliders() {
+        boolean[][] walls = new boolean[currentLevel.length][currentLevel[0].length];
+        for (int i = 0; i < walls.length; i++) {
+            for (int j = 0; j < walls[i].length; j++) {
+                walls[i][j] = currentLevel[i][j] == ID.Wall;
+            }
+        }
+
+        Vec2 squareSize = GameSettings.getSquareScale();
+        for (WallRectangles.Rect r : WallRectangles.find(walls)) {
+            // Tile positions are tile centers, so the rectangle's center is between the first and
+            // last tile
+            Vec2 center = Vec2.multiply(
+                new Vec2((r.left() + r.right()) / 2.0, (r.top() + r.bottom()) / 2.0), squareSize);
+            new WallCollider(center, r.width(), r.height());
         }
     }
 

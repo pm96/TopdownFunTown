@@ -31,7 +31,7 @@ public class EnemyRandomizerToken {
                 new AlienPurple(pos);
                 break;
             case AlIEN_ZOMBIE:
-                new AlienPurple(pos);
+                new AlienZombie(pos);
                 break;
             case ALIEN_EXPLODE:
                 new AlienExplode(pos);

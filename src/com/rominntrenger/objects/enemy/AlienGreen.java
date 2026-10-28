@@ -1,5 +1,6 @@
 package com.rominntrenger.objects.enemy;
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.graphics.AnimationSprite;
 import com.bluebook.graphics.Sprite;
 import com.bluebook.util.GameSettings;
@@ -22,8 +23,8 @@ public class AlienGreen extends Enemy {
     public AlienGreen(Vec2 position) {
         super(position, Vec2.ZERO, new AnimationSprite("enemies/enemyGreen", 3));
         Random r = new Random();
-        prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 200;
+        prevShot = GameEngine.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
+        speed = GameSettings.getDouble("Alien_green_speed");
 
         max_health = GameSettings.getInt("Alien_green_max_health");
         health = max_health;
@@ -39,8 +40,8 @@ public class AlienGreen extends Enemy {
         super.update(delta);
         super.nextBehaviour();
 
-        if (super.behaviour instanceof Attack && (System.currentTimeMillis() - prevShot) / 1000 >= shootInterval) {
-            prevShot = System.currentTimeMillis();
+        if (super.behaviour instanceof Attack && (GameEngine.currentTimeMillis() - prevShot) / 1000 >= shootInterval) {
+            prevShot = GameEngine.currentTimeMillis();
             shoot();
         }
     }

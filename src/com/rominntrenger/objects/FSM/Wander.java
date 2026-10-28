@@ -1,5 +1,6 @@
 package com.rominntrenger.objects.FSM;
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.engine.GameApplication;
 import com.bluebook.util.GameSettings;
 import com.bluebook.util.Vec2;
@@ -18,6 +19,11 @@ public class Wander implements Behaviour {
      * this static integer determines a position in an array that contains positions for behaviours
      */
     public static int position = 0;
+
+    /**
+     * All enemies wander at the same speed, their own speed is used when attacking
+     */
+    private static final double WANDER_SPEED = 150;
     private int health = 30;
 
     /**
@@ -26,18 +32,16 @@ public class Wander implements Behaviour {
      */
     @Override
     public void nextBehaviour(Enemy behaviourContext) {
-        double speed = behaviourContext.getSpeed();
         double delta = behaviourContext.getDelta();
 
 
         double moveInterval = 0.7;
-        if ((System.currentTimeMillis() - prevRandomMove) / 1000 >= moveInterval) {
-            prevRandomMove = System.currentTimeMillis();
-            behaviourContext.setSpeed(150);
+        if ((GameEngine.currentTimeMillis() - prevRandomMove) / 1000 >= moveInterval) {
+            prevRandomMove = GameEngine.currentTimeMillis();
             randomMove(behaviourContext);
         }
 
-        behaviourContext.translate(Vec2.multiply(behaviourContext.getDirection(), speed * delta));
+        behaviourContext.translate(Vec2.multiply(behaviourContext.getDirection(), WANDER_SPEED * delta));
         Player player = ((RomInntrenger) GameApplication.
             getInstance()).getClosestPlayer(behaviourContext.getTransform().getGlobalPosition());
         if (player == null)
@@ -61,14 +65,11 @@ public class Wander implements Behaviour {
      * @param behaviourContext the enemy that is moved randomly
      */
     private void randomMove(Enemy behaviourContext) {
-        double speed;
-        double delta;
-        speed = behaviourContext.getSpeed();
-        delta = behaviourContext.getDelta();
+        double delta = behaviourContext.getDelta();
 
         Vec2 direction = Vec2.Vector2FromAngleInDegrees(Math.random() * 360);
         behaviourContext.setDirection(direction);
-        behaviourContext.translate(Vec2.multiply(direction, speed * delta));
+        behaviourContext.translate(Vec2.multiply(direction, WANDER_SPEED * delta));
 
     }
 }

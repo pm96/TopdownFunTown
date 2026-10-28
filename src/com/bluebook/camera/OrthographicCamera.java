@@ -37,12 +37,12 @@ public class OrthographicCamera {
     }
 
     /**
-     * Used to jump to a follow object without transition
+     * Used to jump to a follow object without transition, centering it on screen
      */
     public void moveToFollow() {
-        x = gameobject.getTransform().getLocalPosition().getX();
-        y = gameobject.getTransform().getLocalPosition().getY();
-
+        // Objects are drawn at their position plus the offset, so this puts the object in the middle
+        x = width / 2 - gameobject.getTransform().getLocalPosition().getX();
+        y = height / 2 - gameobject.getTransform().getLocalPosition().getY();
     }
 
     /**

@@ -273,21 +273,13 @@ public class Player extends GameObject {
      */
     @Override
     public void translate(Vec2 moveVector) {
-        Vec2 newPoss = Vec2.add(getPosition(), moveVector);
-
         Collider hit = walkCollider.getIntersectionCollider();
 
-        if (hit == null) {
-            transform.setLocalPosition(newPoss);
-        } else {
-            transform.setLocalPosition(
-                Vec2.add(
-                    transform.getLocalPosition(),
-                    Vec2.multiply(Vec2.subtract(getTransform().getGlobalPosition(),
-                        hit.getGameObject().getTransform().getGlobalPosition())
-                        .getNormalizedVector(), 0.5)));
-
+        if (hit != null) {
+            // Slide along what we hit instead of stopping
+            moveVector = hit.getSlideMovement(getPosition(), moveVector, 0.5);
         }
+        transform.setLocalPosition(Vec2.add(getPosition(), moveVector));
     }
 
     /**

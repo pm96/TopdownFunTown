@@ -4,7 +4,7 @@ import com.bluebook.physics.listeners.OnCollisionListener;
 import com.bluebook.renderer.CanvasRenderer;
 import com.bluebook.util.GameObject;
 import com.bluebook.util.Vec2;
-import com.sun.javafx.geom.Line2D;
+import java.awt.geom.Line2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.shape.*;
 
@@ -72,6 +72,44 @@ public abstract class Collider {
 
     public abstract Rectangle getBoudningBox();
 
+    /**
+     * The point on this collider closest to the given position, used to push other objects out
+     * of it. By default the position of the attached {@link GameObject}
+     */
+    public Vec2 getClosestPoint(Vec2 point) {
+        return gameObject.getPosition();
+    }
+
+    /**
+     * Direction to push an object at the given position to get it out of this collider
+     *
+     * @return normalized vector pointing away from the nearest part of this collider
+     */
+    public Vec2 getPushDirection(Vec2 point) {
+        Vec2 away = Vec2.subtract(point, getClosestPoint(point));
+        if (away.getMagnitude() < 0.001) {
+            // The point is inside, fall back to pushing away from the center
+            away = Vec2.subtract(point, gameObject.getPosition());
+        }
+        return away.getNormalizedVector();
+    }
+
+    /**
+     * How an object at the given position that touches this collider should move. The part of the
+     * movement going into this collider is removed, so the object slides along it instead of
+     * stopping, and the object is pushed a little further out
+     *
+     * @param point position of the object touching this collider
+     * @param move the movement the object wants to make
+     * @param pushOut how far to push the object out of this collider
+     */
+    public Vec2 getSlideMovement(Vec2 point, Vec2 move, double pushOut) {
+        Vec2 out = getPushDirection(point);
+        double into = Vec2.dotProduct(move, out);
+        Vec2 allowed = into < 0 ? Vec2.subtract(move, Vec2.multiply(out, into)) : move;
+        return Vec2.add(allowed, Vec2.multiply(out, pushOut));
+    }
+
     public Vec2 getClosestPointOfIntersection() {
         Vec2 ret = new Vec2(0, 0);
         double maxDist = Double.MAX_VALUE;
@@ -90,7 +128,7 @@ public abstract class Collider {
 
     public abstract boolean instersects(Collider other);
 
-    abstract Line2D[] getLines();
+    abstract Line2D.Float[] getLines();
 
     public void destroy() {
         CanvasRenderer.getInstance().removeCollider(this);
@@ -180,7 +218,7 @@ public abstract class Collider {
     }
 
     /**
-     * If there was a collision on last {@link CollisionThread} update, the collided collider will be
+     * If there was a collision in the last frame, the collided collider will be
      * retrivable here. If this returns null, no collision has occured.
      */
     public Collider getIntersectionCollider() {

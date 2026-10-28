@@ -1,6 +1,7 @@
 package com.rominntrenger.objects.enemy;
 
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.graphics.AnimationSprite;
 import com.bluebook.graphics.Sprite;
 import com.bluebook.physics.Collider;
@@ -25,8 +26,8 @@ public class AlienGlow extends Enemy {
         super(position, Vec2.ZERO, new AnimationSprite("enemies/alienGlow", 4));
         setSize(new Vec2(1.5, 1.5));
         Random r = new Random();
-        prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 200;
+        prevShot = GameEngine.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
+        speed = GameSettings.getDouble("Alien_glow_speed");
 
         max_health = GameSettings.getInt("Alien_glow_max_health");
         health = max_health;
@@ -42,8 +43,8 @@ public class AlienGlow extends Enemy {
         super.update(delta);
         AlienGlow.super.nextBehaviour();
 
-        if (super.behaviour instanceof Attack && (System.currentTimeMillis() - prevShot) / 1000 >= shootInterval) {
-            prevShot = System.currentTimeMillis();
+        if (super.behaviour instanceof Attack && (GameEngine.currentTimeMillis() - prevShot) / 1000 >= shootInterval) {
+            prevShot = GameEngine.currentTimeMillis();
             shoot();
         }
     }

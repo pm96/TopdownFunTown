@@ -19,7 +19,8 @@
   "Physics_rigidbody2d_VelocityVerlet": true,
   "Physics_rigidbody2d_friction":0.1,
   "Physics_rigidbody2d_velocity_threshhold":10.0,
-  "RedRifle_projectile_speed":400,
+
+  "map": "map_0",
 
   "maxAliensfromHive": 10,
   "hiveSpawnRate": 0.2,
@@ -27,6 +28,12 @@
   "Alien_attack_distance": 500,
   "Alien_flee_distance": 900,
   "Alien_green_speed": 450,
+  "Alien_glow_speed": 450,
+  "Alien_worm_speed": 450,
+  "Alien_purple_speed": 350,
+  "Alien_eye_speed": 300,
+  "Alien_zombie_speed": 300,
+  "Alien_explode_speed": 500,
   "Alien_green_max_health": 30,
   "Alien_green_bullet_dmg": 10,
   "Alien_worm_max_health": 50,
@@ -37,8 +44,6 @@
   "Alien_eye_hit_dmg": 1,
   "Alien_glow_max_health": 30,
   "Alien_glow_bullet_dmg": 5,
-  "Alien_mother_max_health": 100,
-  "Alien_mother_hit_dmg": 0,
 
   "player_health":100,
   "player_angular_dampening":0.9,

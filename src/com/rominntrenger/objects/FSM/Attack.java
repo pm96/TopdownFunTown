@@ -48,7 +48,6 @@ public class Attack implements Behaviour {
             behaviourContext.setTarget(player);
             behaviourContext
                 .setDirection(Vec2.subtract(player.getPosition(), behaviourContext.getPosition()));
-            behaviourContext.setSpeed(GameSettings.getDouble("Alien_green_speed"));
             behaviourContext
                 .translate(Vec2.multiply(behaviourContext.getDirection().getNormalizedVector(),
                     speed * delta));
@@ -62,6 +61,10 @@ public class Attack implements Behaviour {
                 if (!hasFled) {
                     hasFled = true;
                     behaviourContext.setBehaviour(Flee.position);
+
+                    AudioPlayer ap = new AudioPlayer("audio/Alien_Flee.wav");
+                    ap.setVolume(0.2f);
+                    ap.playOnce();
 
                 } else {
                     behaviourContext.setBehaviour(Attack.position);

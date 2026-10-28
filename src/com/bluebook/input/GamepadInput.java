@@ -1,152 +1,109 @@
 package com.bluebook.input;
 
-import com.bluebook.engine.GameEngine;
 import com.bluebook.util.Vec2;
-import net.java.games.input.*;
-
-import java.util.ArrayList;
+import com.studiohartman.jamepad.ControllerManager;
+import com.studiohartman.jamepad.ControllerState;
 
 /**
- * GamepadInput will use JInput to get input from gamepad such as PS4 controller or XBox kontroller
+ * GamepadInput reads gamepads such as PlayStation and Xbox controllers through Jamepad, which uses
+ * SDL's controller database (assets/gamecontrollerdb.txt, from
+ * https://github.com/mdqinc/SDL_GameControllerDB), so most controllers work with the same button
+ * layout
+ * <p>
+ * Controls: left stick moves, right stick aims, right trigger or right bumper shoots, B reloads
  */
 public class GamepadInput {
 
-    private Vec2[] leftJoistick;
-    private Vec2[] rightJoistick;
-    private Boolean[] shoot;
-    private Boolean[] reload;
-    private double deadZone = 0.1;
-
-    private ArrayList<Controller> controllers = new ArrayList<>();
+    /**
+     * The game has colors and sprites for at most this many players
+     */
+    private static final int MAX_CONTROLLERS = 4;
 
     /**
-     * This function will initialize the gamepads, and selecting only the gamepads we have configured
+     * Stick movement smaller than this is ignored, since sticks rarely rest exactly at 0
+     */
+    private static final double DEAD_ZONE = 0.15;
+
+    private static final double TRIGGER_THRESHOLD = 0.5;
+
+    private ControllerManager controllers;
+    private int numberOfControllers = 0;
+
+    private Vec2[] leftJoistick = new Vec2[0];
+    private Vec2[] rightJoistick = new Vec2[0];
+    private boolean[] shoot = new boolean[0];
+    private boolean[] reload = new boolean[0];
+
+    /**
+     * This function will initialize the gamepads that are connected when the game starts
      */
     public GamepadInput() {
-
-        Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
-
-        for (int i = 0; i < ca.length; i++) {
-
-
-            if (ca[i].getName().equals("Wireless Controller") ||
-                ca[i].getName().equals("Sony Interactive Entertainment Wireless Controller") ||
-                ca[i].getName().equals("Gamepad") ||
-                ca[i].getName().equals("Controller (XBOX 360 For Windows)")) {
-                controllers.add(ca[i]);
-            }
-            /* Get the name of the controller */
-            System.out.println(ca[i].getName());
-            System.out.println(ca[i].getType().toString());
+        try {
+            controllers = new ControllerManager();
+            controllers.initSDLGamepad();
+            numberOfControllers = Math.min(controllers.getNumControllers(), MAX_CONTROLLERS);
+        } catch (Throwable e) {
+            // e.g. UnsatisfiedLinkError if there is no native library for this platform
+            System.err.println("Gamepad support disabled: " + e);
+            controllers = null;
+            numberOfControllers = 0;
         }
+        System.out.println("Number of controllers " + numberOfControllers);
 
-
-        // setting up cache array
-        int numOfControllers = controllers.size();
-        System.out.println("Number of controllers " + numOfControllers);
-        leftJoistick = new Vec2[numOfControllers];
-        rightJoistick = new Vec2[numOfControllers];
-        shoot = new Boolean[numOfControllers];
-        reload = new Boolean[numOfControllers];
-
-        for (int i = 0; i < numOfControllers; i++) {
-
-            leftJoistick[i] = new Vec2(0, 0);
-            rightJoistick[i] = new Vec2(0, 0);
-            shoot[i] = new Boolean(false);
-            reload[i] = new Boolean(false);
+        leftJoistick = new Vec2[numberOfControllers];
+        rightJoistick = new Vec2[numberOfControllers];
+        shoot = new boolean[numberOfControllers];
+        reload = new boolean[numberOfControllers];
+        for (int i = 0; i < numberOfControllers; i++) {
+            leftJoistick[i] = Vec2.ZERO;
+            rightJoistick[i] = Vec2.ZERO;
         }
     }
 
     public int getNumberOfControllers() {
-        return controllers.size();
+        return numberOfControllers;
     }
 
     /**
-     * This functions will poll events from the gamepads selected and format the input into  format used by the game
+     * This functions will read the gamepads and format the input into the format used by the game.
+     * Should be called once per game step
      */
     public void pullEvents() {
+        if (controllers == null) {
+            return;
+        }
+        controllers.update();
 
-        for (int i = 0; i < controllers.size(); i++) {
-//            if (!controllers[i].getName().equals("Wireless Controller Motion Sensors")) {
-
-            Controller con = controllers.get(i);
-
-
-            con.poll();
-            EventQueue queue = con.getEventQueue();
-            Event event = new Event();
-            while (queue.getNextEvent(event)) {
-                Component comp = event.getComponent();
-
-                switch (comp.getName()) {
-                    case "x":
-                        leftJoistick[i].setX(event.getValue());
-                        break;
-                    case "y":
-                        leftJoistick[i].setY(event.getValue());
-                        break;
-                    case "Y Axis":
-                        double valueY = event.getValue();
-                        leftJoistick[i].setY(valueY);
-                        break;
-                    case "X Axis":
-                        double valueX = event.getValue();
-                        leftJoistick[i].setX(valueX);
-                        break;
-                    case "X Rotation":
-                        rightJoistick[i].setX(event.getValue());
-                        break;
-                    case "Y Rotation":
-                        rightJoistick[i].setY(event.getValue());
-                        break;
-                    case "rx":
-                        rightJoistick[i].setX(event.getValue());
-                        break;
-                    case "ry":
-                        rightJoistick[i].setY(event.getValue());
-                        break;
-                    case "Z Axis":
-                        float value = event.getValue();
-                        shoot[i] = value < -0.8;
-                        break;
-                    case "rz":
-                        value = event.getValue();
-                        shoot[i] = value > -0.8;
-                        break;
-                    case "Button 2":
-                        value = event.getValue();
-                        reload[i] = value > 0.8;
-                        break;
-                    case "B":
-                        value = event.getValue();
-                        reload[i] = value > 0.8;
-                        break;
-                }
-                if (GameEngine.DEBUG) {
-
-                    System.out.println(comp.getName());
-
-                    StringBuffer buffer = new StringBuffer(con.getName());
-                    buffer.append(" NUM: " + i + " ");
-                    buffer.append(" at ");
-                    buffer.append(event.getNanos()).append(", ");
-                    buffer.append(comp.getName()).append(" changed to ");
-                    float value = event.getValue();
-                    if (comp.isAnalog()) {
-                        buffer.append(value);
-                    } else {
-                        if (value == 1.0f) {
-                            buffer.append("On");
-                        } else {
-                            buffer.append("Off");
-                        }
-                    }
-                    System.out.println(buffer.toString());
-                }
+        for (int i = 0; i < numberOfControllers; i++) {
+            ControllerState state = controllers.getState(i);
+            if (!state.isConnected) {
+                leftJoistick[i] = Vec2.ZERO;
+                rightJoistick[i] = Vec2.ZERO;
+                shoot[i] = false;
+                reload[i] = false;
+                continue;
             }
 
+            // Jamepad has up as positive Y, the game has down as positive Y
+            leftJoistick[i] = applyDeadZone(new Vec2(state.leftStickX, -state.leftStickY));
+            rightJoistick[i] = applyDeadZone(new Vec2(state.rightStickX, -state.rightStickY));
+            shoot[i] = state.rightTrigger > TRIGGER_THRESHOLD || state.rb;
+            reload[i] = state.b;
         }
+    }
+
+    /**
+     * Releases the gamepads, call when the game closes
+     */
+    public void close() {
+        if (controllers != null) {
+            controllers.quitSDLGamepad();
+            controllers = null;
+        }
+    }
+
+    private static Vec2 applyDeadZone(Vec2 stick) {
+        return stick.getMagnitude() < DEAD_ZONE ? Vec2.ZERO : stick;
     }
 
     /**
@@ -155,7 +112,7 @@ public class GamepadInput {
      * @return
      */
     public Vec2 getLeftJoistick(int id) {
-        if (id < leftJoistick.length)
+        if (id >= 0 && id < leftJoistick.length)
             return leftJoistick[id];
         else
             return Vec2.ZERO;
@@ -167,7 +124,7 @@ public class GamepadInput {
      * @return
      */
     public Vec2 getRightJoystick(int id) {
-        if (id < leftJoistick.length)
+        if (id >= 0 && id < rightJoistick.length)
             return rightJoistick[id];
         else
             return Vec2.ZERO;
@@ -179,7 +136,7 @@ public class GamepadInput {
      * @return
      */
     public boolean isShoot(int id) {
-        if (id < shoot.length)
+        if (id >= 0 && id < shoot.length)
             return shoot[id];
         else
             return false;
@@ -191,7 +148,7 @@ public class GamepadInput {
      * @return
      */
     public boolean isReload(int id) {
-        if (id < reload.length)
+        if (id >= 0 && id < reload.length)
             return reload[id];
         else
             return false;

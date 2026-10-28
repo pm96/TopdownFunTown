@@ -29,7 +29,11 @@ public class Weapon extends GameObject {
     private static String testFil1 = "audio/scifi002.wav";
     protected String projectilePath = "projectiles/projectile_gold_00";
 
-    private long previousShotTime = 0;
+    /**
+     * In game time, see {@link GameEngine#currentTimeMillis()}. Starts far in the past so the
+     * weapon can fire right away
+     */
+    private long previousShotTime = Long.MIN_VALUE / 2;
     protected double shootInterval = 0.1;
 
     WeaponClip weaponClip;
@@ -53,6 +57,10 @@ public class Weapon extends GameObject {
         setWeaponBase(new WeaponBase());
         setWeaponClip(new WeaponClip());
         setWeaponBarrel(new WeaponBarrel());
+
+        // Start with a full clip, instead of the default ammo that update() would reload away
+        ammoCap = weaponClip.ammoCap;
+        ammoRemaining = ammoCap;
     }
 
     public Vec2 getOffset() {
@@ -72,9 +80,9 @@ public class Weapon extends GameObject {
      * Shoot will shoot a projectile constructed in this class at the direction the player is faced
      */
     public boolean shoot() {
-        if (!isReloading && System.currentTimeMillis() - previousShotTime > shootInterval * 1000 && ammoRemaining > 0) {
+        if (!isReloading && GameEngine.currentTimeMillis() - previousShotTime > shootInterval * 1000 && ammoRemaining > 0) {
 
-            previousShotTime = System.currentTimeMillis();
+            previousShotTime = GameEngine.currentTimeMillis();
 
             ammoRemaining--;
             audioPlayer.setSpatial(holder);
@@ -194,7 +202,7 @@ public class Weapon extends GameObject {
         if (!isReloading) {
             reloadTimer = 0;
             isReloading = true;
-            AudioPlayer ap = new AudioPlayer("audio/Crunch1.wav");
+            AudioPlayer ap = new AudioPlayer("audio/Reloading.wav");
             ap.playOnce();
         }
 //        this.ammoRemaining = ammoCap;

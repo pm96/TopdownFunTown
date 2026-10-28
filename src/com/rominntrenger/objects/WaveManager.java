@@ -30,9 +30,12 @@ public class WaveManager extends GameObject {
     private int boxRadius = 90;
 
     private int waveNumber = 0;
-    private long waveStart = 0;
 
-    private long pauseStart = 0;
+    /**
+     * Game time in seconds since the current wave or pause between waves started. It is counted
+     * from update(), so it stands still while the game is paused
+     */
+    private double stateTime = 0;
     private double pauseTime = 1.5;
 
     private boolean hivesDownMessage = false;
@@ -67,8 +70,6 @@ public class WaveManager extends GameObject {
         bossGradient = new LinearGradient(0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
             new Stop(0.0, Color.PURPLE),
             new Stop(1.0, Color.TRANSPARENT));
-
-        pauseStart = System.currentTimeMillis();
     }
 
     LinearGradient getGradient() {
@@ -86,8 +87,9 @@ public class WaveManager extends GameObject {
 
     @Override
     public void update(double delta) {
+        stateTime += delta;
         if (state == WaveSate.PAUSE) {
-            double timeLeft = pauseTime - (System.currentTimeMillis() - pauseStart) / 1000.0;
+            double timeLeft = pauseTime - stateTime;
             if (timeLeft <= 0.0) {
                 startWave();
             }
@@ -119,7 +121,7 @@ public class WaveManager extends GameObject {
                 alive--;
         }
 
-        pauseStart = System.currentTimeMillis();
+        stateTime = 0;
         state = WaveSate.PAUSE;
 
         if (showMessage) {
@@ -132,7 +134,7 @@ public class WaveManager extends GameObject {
 
     void startWave() {
         state = WaveSate.WAVE;
-        waveStart = System.currentTimeMillis();
+        stateTime = 0;
         waveNumber++;
 
         hivesDownMessage = false;
@@ -154,12 +156,13 @@ public class WaveManager extends GameObject {
     public void clearGamestate() {
         hivesDownMessage = true;
         endWave(false);
+        // Destroyed enemies remove themselves from allEnemies. The hives stay, since the wave
+        // logic counts them
         for (Enemy e : Enemy.allEnemies) {
             if (!(e instanceof AlienHive)) {
                 e.destroy();
             }
         }
-        Enemy.allEnemies.clear();
 
 
     }
@@ -196,9 +199,9 @@ public class WaveManager extends GameObject {
             gc.fillText("Next wave in:", 1920 / 2, height / 2);
 
 
-        double timeLeft = pauseTime - (System.currentTimeMillis() - pauseStart) / 1000.0;
+        double timeLeft = pauseTime - stateTime;
         if (state == WaveSate.WAVE) {
-            timeLeft = (System.currentTimeMillis() - waveStart) / 1000.0;
+            timeLeft = stateTime;
         }
         gc.setFont(new Font(height / 3));
         DecimalFormat df = new DecimalFormat("0.0");

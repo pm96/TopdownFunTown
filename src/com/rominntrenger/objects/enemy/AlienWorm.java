@@ -1,6 +1,7 @@
 package com.rominntrenger.objects.enemy;
 
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.graphics.AnimationSprite;
 import com.bluebook.graphics.Sprite;
 import com.bluebook.util.GameSettings;
@@ -24,8 +25,8 @@ public class AlienWorm extends Enemy {
     public AlienWorm(Vec2 position) {
         super(position, Vec2.ZERO, new AnimationSprite("enemies/alienWorm", 6));
         Random r = new Random();
-        prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 200;
+        prevShot = GameEngine.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
+        speed = GameSettings.getDouble("Alien_worm_speed");
 
         max_health = GameSettings.getInt("Alien_worm_max_health");
         health = max_health;

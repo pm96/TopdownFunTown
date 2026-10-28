@@ -92,6 +92,17 @@ public class Input {
     /**
      * Singelton Getter
      */
+    /**
+     * Forgets keys and mouse buttons pressed since the last call. Called by the game loop after
+     * each step, so a press is seen by exactly one step even if the key is released before it
+     * runs
+     */
+    public void clearPressed() {
+        input_once.clear();
+        mouseButton0 = false;
+        mouseButton1 = false;
+    }
+
     public static Input getInstance() {
         return singleton;
     }
@@ -191,9 +202,9 @@ public class Input {
 
     private void keyReleased(KeyEvent event) {
         KeyCode released = event.getCode();
+        // input_once is not cleared here: a quick tap may be released before the game has had a
+        // chance to see it. It is cleared by clearPressed() after each game step instead
         input.remove(released);
-
-        input_once.remove(released);
 
     }
 

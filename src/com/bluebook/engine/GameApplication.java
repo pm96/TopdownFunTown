@@ -3,6 +3,7 @@ package com.bluebook.engine;
 import com.bluebook.input.Input;
 import com.bluebook.renderer.FPSLineGraph;
 import com.bluebook.util.GameSettings;
+import com.bluebook.util.ResourceReader;
 import com.bluebook.util.Vec2;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -17,7 +18,6 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.Map;
 
@@ -90,32 +90,7 @@ public abstract class GameApplication extends Application {
         Type type = new TypeToken<Map<String, String>>() {
         }.getType();
         Gson gson = new Gson();
-        GameSettings.setLoadedSettings(gson.fromJson(readSettingsFile(), type));
-    }
-
-    private String readSettingsFile() {
-        ClassLoader cl = getClass().getClassLoader();
-        InputStream stream;
-        if (cl == null) {
-            stream = ClassLoader.getSystemResourceAsStream(SETTINGS_PATH);
-        } else {
-            stream = cl.getResourceAsStream(SETTINGS_PATH);
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        int c;
-
-        try {
-            while ((c = stream.read()) != -1) {
-                sb.append((char) c);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return sb.toString();
+        GameSettings.setLoadedSettings(gson.fromJson(ResourceReader.readText(SETTINGS_PATH), type));
     }
 
     private void setStageKeyListener(Stage primaryStage) {

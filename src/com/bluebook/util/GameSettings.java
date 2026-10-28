@@ -2,12 +2,18 @@ package com.bluebook.util;
 
 import com.bluebook.util.Exceptions.SettingNotFoundException;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * This class is used to load a settings json file and make them accessible
- * Each of the getXXXX will trowh an unchecked exception if the requested config key is not found.
- * To let the user know.
+ * Each of the getXXXX will throw a {@link SettingNotFoundException} if the requested key is not
+ * in the settings file, or an {@link IllegalArgumentException} if the value has the wrong type,
+ * so a typo in a key or value is noticed right away.
+ * <p>
+ * Values are parsed the first time they are asked for and then cached, since some are read every
+ * frame.
  */
 public class GameSettings {
 
@@ -15,82 +21,76 @@ public class GameSettings {
 
     private static Map<String, String> loadedSettings;
 
+    private static final Map<String, Object> parsedSettings = new HashMap<>();
+
     public static double scale = 1.0;
 
     public static void setLoadedSettings(Map<String, String> inMap) {
         loadedSettings = inMap;
+        parsedSettings.clear();
     }
 
     /**
      * Will return a double from the settings file if String matches key
      *
      * @param queryString is key that should match config in settings file
-     * @return if string is not found will return -1 and throw exception
      */
     public static double getDouble(String queryString) {
-        try {
-            if (loadedSettings.containsKey(queryString))
-                return Double.parseDouble(loadedSettings.get(queryString));
-            else
-                throw new SettingNotFoundException("Settings with key '" + queryString + "' does not exist");
-        } catch (SettingNotFoundException e) {
-            e.printStackTrace();
-            return -1;
-        }
+        return get(queryString, Double.class, Double::parseDouble);
     }
 
     /**
      * Will return a String from the settings file if String matches key
      *
      * @param queryString is key that should match config in settings file
-     * @return if String is not found will return "" and throw exception
      */
     public static String getString(String queryString) {
-        try {
-            if (loadedSettings.containsKey(queryString))
-                return loadedSettings.get(queryString);
-            else
-                throw new SettingNotFoundException("Settings with key '" + queryString + "' does not exist");
-        } catch (SettingNotFoundException e) {
-            e.printStackTrace();
-            return "";
-        }
+        return get(queryString, String.class, value -> value);
     }
 
     /**
      * Will return a integer from the settings file if String matches key
      *
      * @param queryString is key that should match config in settings file
-     * @return if String is not found will return -1 and throw exception
      */
     public static int getInt(String queryString) {
-        try {
-            if (loadedSettings.containsKey(queryString))
-                return Integer.parseInt(loadedSettings.get(queryString));
-            else
-                throw new SettingNotFoundException("Settings with key '" + queryString + "' does not exist");
-        } catch (SettingNotFoundException e) {
-            e.printStackTrace();
-            return -1;
-        }
+        return get(queryString, Integer.class, Integer::parseInt);
     }
 
     /**
      * Will return a boolean from the settings file if String matches key
      *
      * @param queryString is key that should match config in settings file
-     * @return if String is not found will return FALSE and throw exception
      */
     public static boolean getBoolean(String queryString) {
-        try {
-            if (loadedSettings.containsKey(queryString))
-                return Boolean.parseBoolean(loadedSettings.get(queryString));
-            else
-                throw new SettingNotFoundException("Settings with key '" + queryString + "' does not exist");
-        } catch (SettingNotFoundException e) {
-            e.printStackTrace();
-            return false;
+        return get(queryString, Boolean.class, value -> {
+            if (!value.equals("true") && !value.equals("false")) {
+                throw new IllegalArgumentException("not true or false");
+            }
+            return Boolean.parseBoolean(value);
+        });
+    }
+
+    private static <T> T get(String key, Class<T> type, Function<String, T> parser) {
+        Object cached = parsedSettings.get(key);
+        if (type.isInstance(cached)) {
+            return type.cast(cached);
         }
+
+        String value = loadedSettings.get(key);
+        if (value == null) {
+            throw new SettingNotFoundException("Setting '" + key + "' does not exist in the settings file");
+        }
+
+        T parsed;
+        try {
+            parsed = parser.apply(value);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Setting '" + key + "' should be a "
+                + type.getSimpleName() + ", but is '" + value + "'", e);
+        }
+        parsedSettings.put(key, parsed);
+        return parsed;
     }
 
     /**

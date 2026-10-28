@@ -37,6 +37,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -73,12 +74,20 @@ public class RomInntrenger extends GameApplication {
     };
 
     private DeathOverlay deathOverlay;
+
+    /**
+     * Maps in assets/sprite/maps that can be picked with "map": "random" in the settings
+     */
+    private static final String[] MAPS = {
+        "map_0", "map_1", "map_2", "map_3", "map_4", "map_5", "map_6", "map_7", "map_8"
+    };
     private GamepadInput gi;
 
     @Override
     public void start(Stage primaryStage) {
         loadSettings();
         this.primaryStage = primaryStage;
+        primaryStage.setTitle(GameSettings.getString("window_title"));
 
         Pane root = new Pane();
         root.setPrefSize(1920, 1080);
@@ -103,8 +112,12 @@ public class RomInntrenger extends GameApplication {
     }
 
     private void callMenu() {
+        if (menu == null) {
+            // The menu is turned off with "start_menu" in the settings
+            return;
+        }
         GameEngine.getInstance().pauseGame();
-        GameApplication.getInstance().getStage().getScene().setRoot(menu.getRoot());
+        menu.show();
     }
 
     /**
@@ -113,7 +126,7 @@ public class RomInntrenger extends GameApplication {
     private void setUp() {
         cam = new OrthographicCamera();
 
-        MapCreator level = new MapCreator("map_0");
+        MapCreator level = new MapCreator(chooseMap());
         level.createLevel();
 
         bgMusic = new AudioPlayer("audio/MoodyLoop.wav");
@@ -125,6 +138,17 @@ public class RomInntrenger extends GameApplication {
 
         createEnemyRandomizer();
         createItemRandomizer();
+    }
+
+    /**
+     * The map from the "map" setting, or a random one of {@link #MAPS} if it is "random"
+     */
+    private String chooseMap() {
+        String map = GameSettings.getString("map");
+        if (map.equals("random")) {
+            return MAPS[new Random().nextInt(MAPS.length)];
+        }
+        return map;
     }
 
     /**
@@ -161,9 +185,10 @@ public class RomInntrenger extends GameApplication {
         players.clear();
         Projectile.clearAllProjectiles();
         Explotion.clearAllExplotions();
+        // Enemies may drop items and blood when they are removed, so they go first
+        WaveManager.getInstance().clearGamestate();
         Item.removeAllItems();
         Soot.clearAll();
-        WaveManager.getInstance().clearGamestate();
         Blood.clearAll();
         cam.setX(0);
         cam.setY(0);
@@ -172,6 +197,30 @@ public class RomInntrenger extends GameApplication {
             evilLaughAP = null;
         }
 
+    }
+
+    /**
+     * Starts a new game from the first wave with new players, used by RESTART in the menu and R on
+     * the death screen
+     */
+    public void restartGame() {
+        GameEngine.getInstance().pauseGame();
+        clearGameState();
+        WaveManager.getInstance().setWaveNumber(0);
+        spawnPlayers();
+        cam.follow(players.get(0));
+        cam.moveToFollow();
+        prevWaveNumber = 0;
+        hideDeathOverlay();
+        GameEngine.getInstance().resumeGame();
+    }
+
+    private void hideDeathOverlay() {
+        if (deathOverlay != null) {
+            deathOverlay.destroy();
+            deathOverlay = null;
+            bgMusic.playLoop();
+        }
     }
 
     /**
@@ -188,6 +237,17 @@ public class RomInntrenger extends GameApplication {
          */
         if (!cam.getGameobject().isAlive() && players.size() > 0) {
             cam.follow(players.get(0));
+        }
+
+        /**
+         * Autosaves when a new wave starts (from wave 2), as long as a player is alive.
+         */
+        int waveNumber = WaveManager.getInstance().getWaveNumber();
+        if (waveNumber != prevWaveNumber && players.stream().anyMatch(Player::isAlive)) {
+            prevWaveNumber = waveNumber;
+            if (waveNumber > 1) {
+                SaveStateSaver.save(this);
+            }
         }
 
         /**
@@ -234,15 +294,6 @@ public class RomInntrenger extends GameApplication {
                 AnimationSprite animationSprite = ((AnimationSprite) player.getCurrentWeapon().getSprite());
 
                 if (player.isAlive()) {
-                    if (WaveManager.getInstance().getWaveNumber() != prevWaveNumber) {
-                        prevWaveNumber = WaveManager.getInstance().getWaveNumber();
-                        if(prevWaveNumber == 0 || prevWaveNumber == 1 ){
-
-                        }else{
-                            SaveStateSaver.save(this);
-                        }
-                    }
-
                     if (input.isKeyDown(KeyCode.S) || input.isKeyDown(KeyCode.W) || input
                         .isKeyDown(KeyCode.A)
                         || input.isKeyDown(KeyCode.D)) {
@@ -272,18 +323,12 @@ public class RomInntrenger extends GameApplication {
                     if (player.hasWeapon()) {
                         if (input.isMouseButton0()) {
                             animationSprite.setPlaying(true);
-                            if (player.getCurrentWeapon() != null) {
-                                if (input.isMouseButton0Pressed()) {
-                                    animationSprite.setPlaying(true);
-
-                                    player.shoot();
-                                } else {
-                                    animationSprite.setPlaying(false);
-                                }
-                            }
                             player.shoot();
                         } else if (input.isMouseButton1Pressed()) {
                             player.reloadCurrentWeapon();
+                            animationSprite.setPlaying(false);
+                        } else {
+                            animationSprite.setPlaying(false);
                         }
 
                     }
@@ -329,17 +374,23 @@ public class RomInntrenger extends GameApplication {
             }
             if (input.isKeyPressed(KeyCode.P)) {
                 SaveStateLoader.loadPreviousSave(this);
-                deathOverlay.destroy();
-                deathOverlay = null;
-                bgMusic.playLoop();
-
-
+                hideDeathOverlay();
+            } else if (input.isKeyPressed(KeyCode.R)) {
+                restartGame();
             } else if (input.isKeyPressed(KeyCode.ESCAPE)) {
                 Platform.runLater(() -> primaryStage.close());
 
             }
         }
 
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        if (gi != null) {
+            gi.close();
+        }
     }
 
     public CopyOnWriteArrayList<Player> getPlayers() {
