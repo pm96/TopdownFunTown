@@ -27,7 +27,7 @@ public class AlienZombie extends Enemy {
         super(position, Vec2.ZERO, new AnimationSprite("enemies/alienZombie", 4));
         Random r = new Random();
         prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 100;
+        speed = GameSettings.getDouble("Alien_zombie_speed");
 
         max_health = GameSettings.getInt("Alien_zombie_max_health");
         health = max_health;

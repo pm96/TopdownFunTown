@@ -25,7 +25,7 @@ public class AlienEye extends Enemy {
         shootInterval = 0.2;
         prevShot = 0;
         prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 100;
+        speed = GameSettings.getDouble("Alien_eye_speed");
 
         max_health = GameSettings.getInt("Alien_eye_max_health");
         health = max_health;

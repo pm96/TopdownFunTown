@@ -25,7 +25,7 @@ public class AlienWorm extends Enemy {
         super(position, Vec2.ZERO, new AnimationSprite("enemies/alienWorm", 6));
         Random r = new Random();
         prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 200;
+        speed = GameSettings.getDouble("Alien_worm_speed");
 
         max_health = GameSettings.getInt("Alien_worm_max_health");
         health = max_health;

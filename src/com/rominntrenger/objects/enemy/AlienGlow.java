@@ -26,7 +26,7 @@ public class AlienGlow extends Enemy {
         setSize(new Vec2(1.5, 1.5));
         Random r = new Random();
         prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 200;
+        speed = GameSettings.getDouble("Alien_glow_speed");
 
         max_health = GameSettings.getInt("Alien_glow_max_health");
         health = max_health;

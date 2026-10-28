@@ -48,7 +48,6 @@ public class Attack implements Behaviour {
             behaviourContext.setTarget(player);
             behaviourContext
                 .setDirection(Vec2.subtract(player.getPosition(), behaviourContext.getPosition()));
-            behaviourContext.setSpeed(GameSettings.getDouble("Alien_green_speed"));
             behaviourContext
                 .translate(Vec2.multiply(behaviourContext.getDirection().getNormalizedVector(),
                     speed * delta));

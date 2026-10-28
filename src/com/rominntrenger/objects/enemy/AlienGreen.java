@@ -23,7 +23,7 @@ public class AlienGreen extends Enemy {
         super(position, Vec2.ZERO, new AnimationSprite("enemies/enemyGreen", 3));
         Random r = new Random();
         prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 200;
+        speed = GameSettings.getDouble("Alien_green_speed");
 
         max_health = GameSettings.getInt("Alien_green_max_health");
         health = max_health;

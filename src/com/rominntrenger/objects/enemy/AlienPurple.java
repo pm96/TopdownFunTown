@@ -5,6 +5,7 @@ import com.bluebook.graphics.AnimationSprite;
 import com.bluebook.graphics.Sprite;
 import com.bluebook.physics.Collider;
 import com.bluebook.physics.listeners.OnCollisionListener;
+import com.bluebook.util.GameSettings;
 import com.bluebook.util.Vec2;
 import com.rominntrenger.objects.FSM.Attack;
 import com.rominntrenger.objects.Projectile;
@@ -25,7 +26,7 @@ public class AlienPurple extends Enemy {
         super(position, Vec2.ZERO, new AnimationSprite("enemies/enemyPurple", 3));
         Random r = new Random();
         prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
-        speed = 100;
+        speed = GameSettings.getDouble("Alien_purple_speed");
 
         max_health = 200;
         health = max_health;
