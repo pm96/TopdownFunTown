@@ -14,11 +14,8 @@ players can play together using gamepads.
 | `src/com/rominntrenger/main/RomInntrenger.java` | Entry point (`main` class) |
 | `assets/` | Sprites, audio, fonts, `weaponComponents.json` and `settings/Default.json` (game balance and screen settings) |
 | `assets/sprite/maps/` | Levels. Each pixel colour maps to a tile or object, see `uml/HexValueList` |
-| `lib/` | JInput (gamepad support, including native libraries). Gson now comes from Maven Central via Gradle |
+| `lib/jinput/` | JInput for gamepad support, with its native libraries. Other libraries come from Maven Central via Gradle |
 | `org/`, `uml/` | PlantUML diagrams and the IntelliJ code style |
-
-`src/com/bluebook/OpenGL` is an unfinished LWJGL experiment. It is not used by the game and is
-excluded from the build.
 
 The engine runs everything on the JavaFX application thread. Each frame, `GameEngine` runs game
 logic and then collisions and lighting in fixed steps of 1/60 second (several steps if the screen

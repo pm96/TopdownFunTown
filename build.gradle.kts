@@ -21,7 +21,7 @@ javafx {
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
     // JInput (gamepads) is checked in with its native libraries, see lib/jinput
-    implementation(files("lib/jinput/jinput-2.0.7.jar", "lib/jutils-1.0.0.jar"))
+    implementation(files("lib/jinput/jinput-2.0.7.jar", "lib/jinput/jutils-1.0.0.jar"))
 }
 
 // The project predates Gradle, so it keeps its original layout:
@@ -30,8 +30,8 @@ sourceSets {
     main {
         java {
             setSrcDirs(listOf("src"))
-            // Unfinished LWJGL experiment, and an old test that no longer compiles
-            exclude("com/bluebook/OpenGL/**", "test/**", "main/**")
+            // An old test that no longer compiles
+            exclude("test/**", "main/**")
         }
         resources {
             setSrcDirs(listOf("src", "assets"))
