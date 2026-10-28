@@ -1,5 +1,6 @@
 package com.rominntrenger.objects;
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.engine.GameApplication;
 import com.bluebook.graphics.Sprite;
 import com.bluebook.util.GameSettings;
@@ -61,10 +62,10 @@ public class AlienHive extends Enemy {
      */
     public void spawn(int i) {
         if (isActive) {
-            if (System.currentTimeMillis() - previousSpawn > spawnRate * 1000.0
+            if (GameEngine.currentTimeMillis() - previousSpawn > spawnRate * 1000.0
                 && enemyNum < max_enemies) {
                 ((RomInntrenger) GameApplication.getInstance()).addRandomEnemy.randomElement().spawn(this.getPosition());
-                previousSpawn = System.currentTimeMillis();
+                previousSpawn = GameEngine.currentTimeMillis();
                 enemyNum++;
             }
         }

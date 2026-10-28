@@ -1,5 +1,6 @@
 package com.rominntrenger.objects.FSM;
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.engine.GameApplication;
 import com.bluebook.util.GameSettings;
 import com.bluebook.util.Vec2;
@@ -35,8 +36,8 @@ public class Wander implements Behaviour {
 
 
         double moveInterval = 0.7;
-        if ((System.currentTimeMillis() - prevRandomMove) / 1000 >= moveInterval) {
-            prevRandomMove = System.currentTimeMillis();
+        if ((GameEngine.currentTimeMillis() - prevRandomMove) / 1000 >= moveInterval) {
+            prevRandomMove = GameEngine.currentTimeMillis();
             randomMove(behaviourContext);
         }
 

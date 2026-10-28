@@ -1,10 +1,7 @@
 package com.rominntrenger.gui;
 
-import com.bluebook.engine.GameApplication;
-import com.bluebook.engine.GameEngine;
 import java.io.IOException;
 import java.io.InputStream;
-import javafx.animation.FadeTransition;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
@@ -12,7 +9,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 /**
  * Class that creates the menu and handles moving back and forth between game and menu
@@ -66,31 +62,21 @@ public class Menu extends Parent {
     }
 
     /**
-     * Checks if escape is clicked and starts game and hides menu or shows menu and pauses game
+     * Shows the menu. The game should be paused before calling this
+     */
+    public void show() {
+        primaryStage.getScene().setRoot(root);
+    }
+
+    /**
+     * Esc in the menu goes back to the game. Esc in the game is handled by the game loop, which
+     * opens the menu, so the two never react to the same key press
      */
     public void keyBoardInput() {
         scene.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ESCAPE) {
-                if (!gameMenu.isVisible()) {
-                    FadeTransition ft = new FadeTransition(Duration.seconds(0.5), gameMenu);
-                    ft.setFromValue(0);
-                    ft.setToValue(1);
-
-                    gameMenu.setVisible(true);
-                    ft.setOnFinished(evt -> GameEngine.getInstance().pauseGame());
-                    ft.play();
-                } else {
-                    FadeTransition ft = new FadeTransition(Duration.seconds(0.5), gameMenu);
-                    ft.setFromValue(1);
-                    ft.setToValue(0);
-                    ft.setOnFinished(evt -> gameMenu.setVisible(false));
-                    ft.play();
-                    try {
-                        GameApplication.getInstance().callGame(primaryStage);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            if (event.getCode() == KeyCode.ESCAPE && scene.getRoot() == root) {
+                event.consume();
+                gameMenu.startOrResumeGame();
             }
         });
     }

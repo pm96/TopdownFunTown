@@ -1,5 +1,6 @@
 package com.rominntrenger.objects;
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.graphics.Sprite;
 import com.bluebook.physics.BoxCollider;
 import com.bluebook.physics.CircleCollider;
@@ -57,7 +58,7 @@ public class Projectile extends GameObject {
         collider.setName("Bullet");
         collider.setTag("DMG");
 
-        startTime = System.currentTimeMillis();
+        startTime = GameEngine.currentTimeMillis();
         startSize = new Vec2(1, 1);
         squareHeightStart = 1;
         squareWithStart = 1;
@@ -96,7 +97,7 @@ public class Projectile extends GameObject {
 
         if (isTimeDecay) {
 
-            double elapseInSeconds = (System.currentTimeMillis() - startTime) / 1000.0;
+            double elapseInSeconds = (GameEngine.currentTimeMillis() - startTime) / 1000.0;
             double TTLAdjusted = TTL * 1.2;
             double elapseProgress = (TTLAdjusted - elapseInSeconds) / TTLAdjusted;
 

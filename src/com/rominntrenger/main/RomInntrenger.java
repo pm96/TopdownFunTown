@@ -103,8 +103,12 @@ public class RomInntrenger extends GameApplication {
     }
 
     private void callMenu() {
+        if (menu == null) {
+            // The menu is turned off with "start_menu" in the settings
+            return;
+        }
         GameEngine.getInstance().pauseGame();
-        GameApplication.getInstance().getStage().getScene().setRoot(menu.getRoot());
+        menu.show();
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.rominntrenger.objects.enemy;
 
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.engine.GameApplication;
 import com.bluebook.graphics.AnimationSprite;
 import com.bluebook.util.GameSettings;
@@ -28,9 +29,9 @@ public class AlienExplode extends Enemy {
     public AlienExplode(Vec2 position) {
         super(position, Vec2.ZERO, new AnimationSprite("enemies/alienExplode", 6));
         Random r = new Random();
-        prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
+        prevShot = GameEngine.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
         speed = GameSettings.getDouble("Alien_explode_speed");
-        startTime = System.currentTimeMillis();
+        startTime = GameEngine.currentTimeMillis();
         dropsBlood = false;
     }
 

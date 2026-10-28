@@ -1,6 +1,7 @@
 package com.rominntrenger.objects.enemy;
 
 
+import com.bluebook.engine.GameEngine;
 import com.bluebook.graphics.AnimationSprite;
 import com.bluebook.graphics.Sprite;
 import com.bluebook.util.GameSettings;
@@ -24,7 +25,7 @@ public class AlienEye extends Enemy {
         Random r = new Random();
         shootInterval = 0.2;
         prevShot = 0;
-        prevShot = System.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
+        prevShot = GameEngine.currentTimeMillis() + r.nextInt((int) (shootInterval * 1000));
         speed = GameSettings.getDouble("Alien_eye_speed");
 
         max_health = GameSettings.getInt("Alien_eye_max_health");
@@ -41,8 +42,8 @@ public class AlienEye extends Enemy {
         super.update(delta);
         AlienEye.super.nextBehaviour();
 
-        if ((System.currentTimeMillis() - prevShot) / 1000 >= shootInterval){
-            prevShot = System.currentTimeMillis();
+        if ((GameEngine.currentTimeMillis() - prevShot) / 1000 >= shootInterval){
+            prevShot = GameEngine.currentTimeMillis();
             shoot();
         }
 

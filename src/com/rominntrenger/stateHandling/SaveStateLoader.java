@@ -105,7 +105,7 @@ public class SaveStateLoader {
         ret.setAmmoRemaining(w.ammoRemaining);
         ret.setProjectilePath(w.projectilePath);
         ret.setShootInterval(w.shootInterval);
-        ret.setPreviousShotTime(w.previousShotTime);
+        // previousShotTime is not restored: game time starts over when the game is started again
         ret.setWeaponClip(w.weaponClip);
         ret.setWeaponBarrel(w.weaponBarrel);
         ret.setWeaponBase(w.weaponBase);

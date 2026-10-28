@@ -4,7 +4,6 @@ import com.bluebook.audio.AudioPlayer;
 import com.bluebook.engine.GameApplication;
 import com.rominntrenger.main.RomInntrenger;
 import com.rominntrenger.stateHandling.SaveStateLoader;
-import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Parent;
@@ -72,24 +71,24 @@ import java.io.IOException;
     }
 
     /**
+     * Leaves the menu and starts the game, or resumes it if it has already started
+     */
+    void startOrResumeGame() {
+        try {
+            GameApplication.getInstance().callGame(primaryStage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Adds buttons to the menus created by the constructor in {@link GameMenu}
      */
     private void addButton() {
         ap = new AudioPlayer("audio/MoodyLoop.wav");
 
         resumeButton = new MenuButton("START/RESUME");
-        resumeButton.setOnMouseClicked(event -> {
-            FadeTransition fadeTransition = new FadeTransition(Duration.seconds(0.5), this);
-            fadeTransition.setFromValue(1);
-            fadeTransition.setToValue(0);
-            fadeTransition.setOnFinished(evt -> setVisible(false));
-            fadeTransition.play();
-           try {
-                GameApplication.getInstance().callGame(primaryStage);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
+        resumeButton.setOnMouseClicked(event -> startOrResumeGame());
 
         restartButton = new MenuButton("RESTART");
 

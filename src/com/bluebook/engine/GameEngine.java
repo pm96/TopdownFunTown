@@ -1,5 +1,6 @@
 package com.bluebook.engine;
 
+import com.bluebook.input.Input;
 import com.bluebook.physics.HitDetectionHandler;
 import com.bluebook.renderer.CanvasRenderer;
 import com.bluebook.util.GameObject;
@@ -34,6 +35,11 @@ public class GameEngine {
      * Time that has passed but not been simulated yet
      */
     private double unsimulatedTime = 0;
+
+    /**
+     * Seconds of game time simulated so far, see {@link #currentTimeMillis()}
+     */
+    private static double gameTime = 0;
 
     /**
      * Objects may be created or destroyed while the list is updated, the copy on write list
@@ -101,8 +107,10 @@ public class GameEngine {
                     int steps = 0;
                     while (unsimulatedTime >= TIME_STEP && steps < MAX_STEPS_PER_FRAME
                         && !isPaused) {
+                        gameTime += TIME_STEP;
                         update(TIME_STEP);
                         HitDetectionHandler.getInstance().update();
+                        clearPressedInput();
                         unsimulatedTime -= TIME_STEP;
                         steps++;
                     }
@@ -146,6 +154,14 @@ public class GameEngine {
             isPaused = false;
             previousFrameNanos = 0;
             unsimulatedTime = 0;
+            // Keys pressed in a menu shouldn't also act in the game
+            clearPressedInput();
+        }
+    }
+
+    private void clearPressedInput() {
+        if (Input.getInstance() != null) {
+            Input.getInstance().clearPressed();
         }
     }
 
@@ -155,6 +171,14 @@ public class GameEngine {
      */
     public boolean isPaused() {
         return isPaused;
+    }
+
+    /**
+     * Milliseconds of game time. Works like {@link System#currentTimeMillis()}, but stands still
+     * while the game is paused, so cooldowns and timers in the game pause with it
+     */
+    public static long currentTimeMillis() {
+        return (long) (gameTime * 1000);
     }
 
     /**
