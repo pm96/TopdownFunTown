@@ -57,6 +57,10 @@ public class Weapon extends GameObject {
         setWeaponBase(new WeaponBase());
         setWeaponClip(new WeaponClip());
         setWeaponBarrel(new WeaponBarrel());
+
+        // Start with a full clip, instead of the default ammo that update() would reload away
+        ammoCap = weaponClip.ammoCap;
+        ammoRemaining = ammoCap;
     }
 
     public Vec2 getOffset() {

@@ -37,6 +37,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -73,6 +74,13 @@ public class RomInntrenger extends GameApplication {
     };
 
     private DeathOverlay deathOverlay;
+
+    /**
+     * Maps in assets/sprite/maps that can be picked with "map": "random" in the settings
+     */
+    private static final String[] MAPS = {
+        "map_0", "map_1", "map_2", "map_3", "map_4", "map_5", "map_6", "map_7", "map_8"
+    };
     private GamepadInput gi;
 
     @Override
@@ -118,7 +126,7 @@ public class RomInntrenger extends GameApplication {
     private void setUp() {
         cam = new OrthographicCamera();
 
-        MapCreator level = new MapCreator("map_0");
+        MapCreator level = new MapCreator(chooseMap());
         level.createLevel();
 
         bgMusic = new AudioPlayer("audio/MoodyLoop.wav");
@@ -130,6 +138,17 @@ public class RomInntrenger extends GameApplication {
 
         createEnemyRandomizer();
         createItemRandomizer();
+    }
+
+    /**
+     * The map from the "map" setting, or a random one of {@link #MAPS} if it is "random"
+     */
+    private String chooseMap() {
+        String map = GameSettings.getString("map");
+        if (map.equals("random")) {
+            return MAPS[new Random().nextInt(MAPS.length)];
+        }
+        return map;
     }
 
     /**
@@ -189,6 +208,8 @@ public class RomInntrenger extends GameApplication {
         clearGameState();
         WaveManager.getInstance().setWaveNumber(0);
         spawnPlayers();
+        cam.follow(players.get(0));
+        cam.moveToFollow();
         prevWaveNumber = 0;
         hideDeathOverlay();
         GameEngine.getInstance().resumeGame();

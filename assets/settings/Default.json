@@ -20,6 +20,8 @@
   "Physics_rigidbody2d_friction":0.1,
   "Physics_rigidbody2d_velocity_threshhold":10.0,
 
+  "map": "map_0",
+
   "maxAliensfromHive": 10,
   "hiveSpawnRate": 0.2,
 

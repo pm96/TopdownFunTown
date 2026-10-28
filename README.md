@@ -58,11 +58,14 @@ keyboard and mouse.
 | Left mouse button | Shoot |
 | Right mouse button | Reload |
 | `Esc` | Open the menu (or quit after you die) |
-| `P` | Restart from the last save after you die |
+| `P` / `R` | After you die: load the last save / start over |
 | `Up` / `Down` | Save / load the game |
 | `F` | Leave fullscreen |
 | `F1` | Toggle debug view (colliders, quadtree, FPS) |
 | `F2` | Freeze/unfreeze the game |
+
+Set `"map"` in `assets/settings/Default.json` to `map_0` to `map_8`, or to `random` for a
+different map each time.
 
 The game also saves automatically at the start of each new wave. Saves are JSON files in
 `.rominntrengere/save.json` in your home folder. With gamepads connected when the
