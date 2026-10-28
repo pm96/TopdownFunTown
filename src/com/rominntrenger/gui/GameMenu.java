@@ -92,6 +92,10 @@ import java.io.IOException;
         resumeButton.setOnMouseClicked(event -> startOrResumeGame());
 
         restartButton = new MenuButton("RESTART");
+        restartButton.setOnMouseClicked(event -> {
+            startOrResumeGame();
+            ((RomInntrenger) GameApplication.getInstance()).restartGame();
+        });
 
         optionsButton = new MenuButton("OPTIONS");
         optionsButton.setOnMouseClicked(event -> {
@@ -207,7 +211,7 @@ import java.io.IOException;
             soundValue.setText(((int) ((double) new_val * 100)) + "");
         });
 
-        menu0.getChildren().addAll(resumeButton, loadFromFile, optionsButton, exitButton);
+        menu0.getChildren().addAll(resumeButton, restartButton, loadFromFile, optionsButton, exitButton);
         menu1.getChildren().addAll(backButtonMainMenu, soundButton);
         volDisplay.getChildren().addAll(soundCaption, soundSlider, soundValue);
         menu2.getChildren().addAll(backButtonSoundMenu, volDisplay);

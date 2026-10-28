@@ -156,12 +156,13 @@ public class WaveManager extends GameObject {
     public void clearGamestate() {
         hivesDownMessage = true;
         endWave(false);
+        // Destroyed enemies remove themselves from allEnemies. The hives stay, since the wave
+        // logic counts them
         for (Enemy e : Enemy.allEnemies) {
             if (!(e instanceof AlienHive)) {
                 e.destroy();
             }
         }
-        Enemy.allEnemies.clear();
 
 
     }

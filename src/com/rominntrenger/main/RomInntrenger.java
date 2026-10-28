@@ -166,9 +166,10 @@ public class RomInntrenger extends GameApplication {
         players.clear();
         Projectile.clearAllProjectiles();
         Explotion.clearAllExplotions();
+        // Enemies may drop items and blood when they are removed, so they go first
+        WaveManager.getInstance().clearGamestate();
         Item.removeAllItems();
         Soot.clearAll();
-        WaveManager.getInstance().clearGamestate();
         Blood.clearAll();
         cam.setX(0);
         cam.setY(0);
@@ -177,6 +178,28 @@ public class RomInntrenger extends GameApplication {
             evilLaughAP = null;
         }
 
+    }
+
+    /**
+     * Starts a new game from the first wave with new players, used by RESTART in the menu and R on
+     * the death screen
+     */
+    public void restartGame() {
+        GameEngine.getInstance().pauseGame();
+        clearGameState();
+        WaveManager.getInstance().setWaveNumber(0);
+        spawnPlayers();
+        prevWaveNumber = 0;
+        hideDeathOverlay();
+        GameEngine.getInstance().resumeGame();
+    }
+
+    private void hideDeathOverlay() {
+        if (deathOverlay != null) {
+            deathOverlay.destroy();
+            deathOverlay = null;
+            bgMusic.playLoop();
+        }
     }
 
     /**
@@ -330,11 +353,9 @@ public class RomInntrenger extends GameApplication {
             }
             if (input.isKeyPressed(KeyCode.P)) {
                 SaveStateLoader.loadPreviousSave(this);
-                deathOverlay.destroy();
-                deathOverlay = null;
-                bgMusic.playLoop();
-
-
+                hideDeathOverlay();
+            } else if (input.isKeyPressed(KeyCode.R)) {
+                restartGame();
             } else if (input.isKeyPressed(KeyCode.ESCAPE)) {
                 Platform.runLater(() -> primaryStage.close());
 
