@@ -62,6 +62,10 @@ public class Attack implements Behaviour {
                     hasFled = true;
                     behaviourContext.setBehaviour(Flee.position);
 
+                    AudioPlayer ap = new AudioPlayer("audio/Alien_Flee.wav");
+                    ap.setVolume(0.2f);
+                    ap.playOnce();
+
                 } else {
                     behaviourContext.setBehaviour(Attack.position);
                 }

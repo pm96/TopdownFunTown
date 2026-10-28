@@ -198,7 +198,7 @@ public class Weapon extends GameObject {
         if (!isReloading) {
             reloadTimer = 0;
             isReloading = true;
-            AudioPlayer ap = new AudioPlayer("audio/Crunch1.wav");
+            AudioPlayer ap = new AudioPlayer("audio/Reloading.wav");
             ap.playOnce();
         }
 //        this.ammoRemaining = ammoCap;
