@@ -1,5 +1,6 @@
 package com.rominntrenger.objects.weapon;
 
+import com.bluebook.util.ResourceReader;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -21,7 +22,7 @@ public class WeaponComponentGSONHandler {
 
     public static WeaponComponentHolderDAO loadTest() {
         Gson gson = new Gson();
-        return gson.fromJson(readFile("weaponComponents.json"), WeaponComponentHolderDAO.class);
+        return gson.fromJson(ResourceReader.readText("weaponComponents.json"), WeaponComponentHolderDAO.class);
     }
 
     private static void writeFile(String path, String content) {
@@ -38,31 +39,5 @@ public class WeaponComponentGSONHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-
-    private static String readFile(String path) {
-        ClassLoader cl = WeaponComponentGSONHandler.class.getClassLoader();
-        InputStream stream;
-        if (cl == null) {
-            stream = ClassLoader.getSystemResourceAsStream(path);
-        } else {
-            stream = cl.getResourceAsStream(path);
-        }
-
-        StringBuilder sb = new StringBuilder();
-
-        int c;
-
-        try {
-            while ((c = stream.read()) != -1) {
-                sb.append((char) c);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return sb.toString();
     }
 }
