@@ -4,6 +4,7 @@ import com.bluebook.engine.GameEngine;
 import com.bluebook.util.Vec2;
 import net.java.games.input.*;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -24,7 +25,7 @@ public class GamepadInput {
      */
     public GamepadInput() {
 
-        Controller[] ca = ControllerEnvironment.getDefaultEnvironment().getControllers();
+        Controller[] ca = findControllers();
 
         for (int i = 0; i < ca.length; i++) {
 
@@ -55,6 +56,26 @@ public class GamepadInput {
             rightJoistick[i] = new Vec2(0, 0);
             shoot[i] = new Boolean(false);
             reload[i] = new Boolean(false);
+        }
+    }
+
+    /**
+     * Asks JInput for connected controllers. Returns no controllers if gamepads can't be read,
+     * so the game falls back to keyboard and mouse instead of crashing
+     */
+    private static Controller[] findControllers() {
+        // JInput on Linux reads /dev/input, and prints a stack trace if it isn't readable
+        File devInput = new File("/dev/input");
+        if (System.getProperty("os.name").startsWith("Linux") && !devInput.canRead()) {
+            return new Controller[0];
+        }
+
+        try {
+            return ControllerEnvironment.getDefaultEnvironment().getControllers();
+        } catch (Throwable e) {
+            // e.g. UnsatisfiedLinkError if JInput's native library is not on java.library.path
+            System.err.println("Gamepad support disabled: " + e);
+            return new Controller[0];
         }
     }
 

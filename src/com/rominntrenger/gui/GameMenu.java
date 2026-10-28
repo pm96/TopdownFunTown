@@ -194,7 +194,7 @@ import java.io.IOException;
         gainControl = ap.getGainControl();
         soundSlider.valueProperty().addListener((ObservableValue<? extends Number> ov, Number old_val,
                                                  Number new_val) -> {
-            if (clip.isControlSupported(Type.MASTER_GAIN)) {
+            if (clip != null && clip.isControlSupported(Type.MASTER_GAIN)) {
                 FloatControl volume = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
                 float range = gainControl.getMaximum() - gainControl.getMinimum();
                 float gain = (range * (float) soundSlider.getValue()) + gainControl.getMinimum();
