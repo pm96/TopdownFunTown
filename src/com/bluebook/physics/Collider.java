@@ -94,6 +94,22 @@ public abstract class Collider {
         return away.getNormalizedVector();
     }
 
+    /**
+     * How an object at the given position that touches this collider should move. The part of the
+     * movement going into this collider is removed, so the object slides along it instead of
+     * stopping, and the object is pushed a little further out
+     *
+     * @param point position of the object touching this collider
+     * @param move the movement the object wants to make
+     * @param pushOut how far to push the object out of this collider
+     */
+    public Vec2 getSlideMovement(Vec2 point, Vec2 move, double pushOut) {
+        Vec2 out = getPushDirection(point);
+        double into = Vec2.dotProduct(move, out);
+        Vec2 allowed = into < 0 ? Vec2.subtract(move, Vec2.multiply(out, into)) : move;
+        return Vec2.add(allowed, Vec2.multiply(out, pushOut));
+    }
+
     public Vec2 getClosestPointOfIntersection() {
         Vec2 ret = new Vec2(0, 0);
         double maxDist = Double.MAX_VALUE;
