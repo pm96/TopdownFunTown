@@ -191,6 +191,17 @@ public class RomInntrenger extends GameApplication {
         }
 
         /**
+         * Autosaves when a new wave starts (from wave 2), as long as a player is alive.
+         */
+        int waveNumber = WaveManager.getInstance().getWaveNumber();
+        if (waveNumber != prevWaveNumber && players.stream().anyMatch(Player::isAlive)) {
+            prevWaveNumber = waveNumber;
+            if (waveNumber > 1) {
+                SaveStateSaver.save(this);
+            }
+        }
+
+        /**
          * Checks to see if one or more controllers are connected.
          * Connects movement to controller(s) if they are.
          */
@@ -234,15 +245,6 @@ public class RomInntrenger extends GameApplication {
                 AnimationSprite animationSprite = ((AnimationSprite) player.getCurrentWeapon().getSprite());
 
                 if (player.isAlive()) {
-                    if (WaveManager.getInstance().getWaveNumber() != prevWaveNumber) {
-                        prevWaveNumber = WaveManager.getInstance().getWaveNumber();
-                        if(prevWaveNumber == 0 || prevWaveNumber == 1 ){
-
-                        }else{
-                            SaveStateSaver.save(this);
-                        }
-                    }
-
                     if (input.isKeyDown(KeyCode.S) || input.isKeyDown(KeyCode.W) || input
                         .isKeyDown(KeyCode.A)
                         || input.isKeyDown(KeyCode.D)) {
@@ -272,18 +274,12 @@ public class RomInntrenger extends GameApplication {
                     if (player.hasWeapon()) {
                         if (input.isMouseButton0()) {
                             animationSprite.setPlaying(true);
-                            if (player.getCurrentWeapon() != null) {
-                                if (input.isMouseButton0Pressed()) {
-                                    animationSprite.setPlaying(true);
-
-                                    player.shoot();
-                                } else {
-                                    animationSprite.setPlaying(false);
-                                }
-                            }
                             player.shoot();
                         } else if (input.isMouseButton1Pressed()) {
                             player.reloadCurrentWeapon();
+                            animationSprite.setPlaying(false);
+                        } else {
+                            animationSprite.setPlaying(false);
                         }
 
                     }

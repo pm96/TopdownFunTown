@@ -69,11 +69,7 @@ public class Light2D {
 
         for (int pass = 0; pass < 2; pass++) {
             for (LinePoint lp : points) {
-                openSegments.sort((o1, o2) -> segmentInFrontOf(o1, o2, pos) ? 1 : -1);
-
-                LineSegment nearestStart = null;
-                if (openSegments.size() > 0)
-                    nearestStart = openSegments.get(0);
+                LineSegment nearestStart = nearestSegment(openSegments, pos);
 
                 if (lp.beginsSegment) {
                     openSegments.add(lp.segment);
@@ -81,10 +77,7 @@ public class Light2D {
                     openSegments.remove(lp.segment);
                 }
 
-                openSegments.sort((o1, o2) -> segmentInFrontOf(o1, o2, pos) ? 1 : -1);
-                LineSegment nearestEnd = null;
-                if (openSegments.size() > 0)
-                    nearestEnd = openSegments.get(0);
+                LineSegment nearestEnd = nearestSegment(openSegments, pos);
 
                 if (nearestStart != nearestEnd) {
                     if (pass == 1) {
@@ -193,6 +186,23 @@ public class Light2D {
         double x = point1.getX() + s * (point2.getX() - point1.getX());
         double y = point1.getY() + s * (point2.getY() - point1.getY());
         return new Vec2(x, y);
+    }
+
+    /**
+     * Finds the segment that comes first when ordered by {@link #segmentInFrontOf}.
+     * "In front of" is not a total order, so sorting with it can make Java's sort throw
+     * "Comparison method violates its general contract!". A linear scan never does.
+     *
+     * @return the first segment, or null if there are none
+     */
+    private LineSegment nearestSegment(ArrayList<LineSegment> segments, Vec2 relativePoint) {
+        LineSegment nearest = null;
+        for (LineSegment segment : segments) {
+            if (nearest == null || segmentInFrontOf(nearest, segment, relativePoint)) {
+                nearest = segment;
+            }
+        }
+        return nearest;
     }
 
     boolean segmentInFrontOf(LineSegment a, LineSegment b, Vec2 relativePoint) {

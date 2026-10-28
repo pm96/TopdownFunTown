@@ -22,17 +22,25 @@ import java.io.ObjectInputStream;
 
 public class SaveStateLoader {
 
+    private static final File DEFAULT_SAVE_FILE = new File("./myFile.data");
+
     public static MetaDAO load() throws IOException, ClassNotFoundException {
-        FileInputStream fileIn = new FileInputStream("./myFile.data");
-        ObjectInputStream in = new ObjectInputStream(fileIn);
-        return (MetaDAO) in.readObject();
+        return loadFromFile(DEFAULT_SAVE_FILE);
     }
 
     public static MetaDAO loadFromFile(File file) throws IOException, ClassNotFoundException {
-        FileInputStream fileIn = new FileInputStream(file);
-        ObjectInputStream in = new ObjectInputStream(fileIn);
-        return (MetaDAO) in.readObject();
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+            return (MetaDAO) in.readObject();
+        }
     }
+
+    /**
+     * Loads the save made automatically each wave (or with the save key)
+     */
+    public static void loadPreviousSave(RomInntrenger rom) {
+        loadPreviousSave(rom, DEFAULT_SAVE_FILE);
+    }
+
     public static void loadPreviousSave(RomInntrenger rom, File f) {
         GameEngine.getInstance().pauseGame();
         MetaDAO meta = null;
@@ -60,38 +68,6 @@ public class SaveStateLoader {
 
         GameEngine.getInstance().resumeGame();
         MessageHandler.getInstance().writeMessage("Load Complete");
-    }
-
-    public static void loadPreviousSave(RomInntrenger rom) {
-
-        GameEngine.getInstance().pauseGame();
-
-        MetaDAO meta = null;
-        try {
-            meta = load();
-        } catch (IOException e) {
-            e.printStackTrace();
-            GameEngine.getInstance().resumeGame();
-            MessageHandler.getInstance().writeMessage("There was a problem locating the saveFile\n Will create a new save");
-            SaveStateSaver.save(rom);
-            return;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            GameEngine.getInstance().resumeGame();
-            MessageHandler.getInstance().writeMessage("There was a problem loading the saveFile\n Will create a new save");
-            SaveStateSaver.save(rom);
-            return;
-        }
-
-        rom.clearGameState();
-        loadPlayers(rom, meta);
-        WaveManager.getInstance().setWaveNumber(meta.waveManager.waveNumber);
-
-        OrthographicCamera.main.moveToFollow();
-
-        GameEngine.getInstance().resumeGame();
-        MessageHandler.getInstance().writeMessage("Load Complete");
-
     }
 
     private static void loadPlayers(RomInntrenger rom, MetaDAO meta) {
