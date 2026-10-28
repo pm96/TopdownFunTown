@@ -7,6 +7,8 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - claude/old-school-project-overview-xkmap5  # temporary, to test the workflow
 
 jobs:
   package:
