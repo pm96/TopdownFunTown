@@ -15,51 +15,38 @@ import com.rominntrenger.stateHandling.DAO.PlayerDAO;
 import com.rominntrenger.stateHandling.DAO.WeaponDAO;
 import javafx.scene.paint.Color;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 
 public class SaveStateLoader {
-
-    private static final File DEFAULT_SAVE_FILE = new File("./myFile.data");
-
-    public static MetaDAO load() throws IOException, ClassNotFoundException {
-        return loadFromFile(DEFAULT_SAVE_FILE);
-    }
-
-    public static MetaDAO loadFromFile(File file) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
-            return (MetaDAO) in.readObject();
-        }
-    }
 
     /**
      * Loads the save made automatically each wave (or with the save key)
      */
     public static void loadPreviousSave(RomInntrenger rom) {
-        loadPreviousSave(rom, DEFAULT_SAVE_FILE);
+        loadPreviousSave(rom, SaveFile.DEFAULT);
     }
 
-    public static void loadPreviousSave(RomInntrenger rom, File f) {
-        GameEngine.getInstance().pauseGame();
-        MetaDAO meta = null;
+    public static void loadPreviousSave(RomInntrenger rom, Path file) {
+        MetaDAO meta;
         try {
-            meta = loadFromFile(f);
-        } catch (IOException e) {
-            e.printStackTrace();
-            GameEngine.getInstance().resumeGame();
-            MessageHandler.getInstance().writeMessage("There was a problem locating the saveFile\n Will create a new save");
+            meta = SaveFile.read(file);
+        } catch (NoSuchFileException e) {
+            MessageHandler.getInstance().writeMessage("There is no save yet\n Will create a new save");
             SaveStateSaver.save(rom);
             return;
-        } catch (ClassNotFoundException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-            GameEngine.getInstance().resumeGame();
-            MessageHandler.getInstance().writeMessage("There was a problem loading the saveFile\n Will create a new save");
-            SaveStateSaver.save(rom);
+            MessageHandler.getInstance().writeMessage("Could not read the save file");
+            return;
+        } catch (SaveFile.InvalidSaveException e) {
+            // Keep the file as it is, so nothing is overwritten by mistake
+            MessageHandler.getInstance().writeMessage(e.getMessage());
             return;
         }
 
+        GameEngine.getInstance().pauseGame();
         rom.clearGameState();
         loadPlayers(rom, meta);
         WaveManager.getInstance().setWaveNumber(meta.waveManager.waveNumber);

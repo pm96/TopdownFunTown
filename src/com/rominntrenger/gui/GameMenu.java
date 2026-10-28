@@ -3,6 +3,7 @@ package com.rominntrenger.gui;
 import com.bluebook.audio.AudioPlayer;
 import com.bluebook.engine.GameApplication;
 import com.rominntrenger.main.RomInntrenger;
+import com.rominntrenger.stateHandling.SaveFile;
 import com.rominntrenger.stateHandling.SaveStateLoader;
 import javafx.animation.TranslateTransition;
 import javafx.beans.value.ObservableValue;
@@ -115,8 +116,12 @@ import java.io.IOException;
         loadFromFile.setOnMouseClicked(event -> {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Select saved file");
+            File saveFolder = SaveFile.DEFAULT.getParent().toFile();
+            if (saveFolder.isDirectory()) {
+                fileChooser.setInitialDirectory(saveFolder);
+            }
             fileChooser.getExtensionFilters().addAll(
-                new ExtensionFilter("Data files", "*.data", "*.txt"),
+                new ExtensionFilter("Save files", "*.json"),
                 new ExtensionFilter("All files", "*.*"));
             File selectedFile = fileChooser.showOpenDialog(primaryStage);
             if(selectedFile != null){
@@ -125,7 +130,7 @@ import java.io.IOException;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                SaveStateLoader.loadPreviousSave((RomInntrenger)GameApplication.getInstance(), selectedFile);
+                SaveStateLoader.loadPreviousSave((RomInntrenger)GameApplication.getInstance(), selectedFile.toPath());
                 System.out.println("LOADING");
 
 

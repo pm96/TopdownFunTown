@@ -45,10 +45,11 @@ If no audio device is available, the game runs without sound. If no gamepad is f
 | Right mouse button | Reload |
 | `Esc` | Open the menu (or quit after you die) |
 | `P` | Restart from the last save after you die |
-| `Up` / `Down` | Save / load the game (`./myFile.data`) |
+| `Up` / `Down` | Save / load the game |
 | `F` | Leave fullscreen |
 | `F1` | Toggle debug view (colliders, quadtree, FPS) |
 | `F2` | Freeze/unfreeze the game |
 
-The game also saves automatically at the start of each new wave. With gamepads connected, each
+The game also saves automatically at the start of each new wave. Saves are JSON files in
+`.rominntrengere/save.json` in your home folder. With gamepads connected, each
 gamepad controls one player: left stick moves and right stick aims.

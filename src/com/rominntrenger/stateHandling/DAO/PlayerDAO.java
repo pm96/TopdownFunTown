@@ -4,9 +4,7 @@ import com.bluebook.graphics.AnimationSprite;
 import com.bluebook.util.Vec2;
 import com.rominntrenger.objects.player.Player;
 
-import java.io.Serializable;
-
-public class PlayerDAO implements Serializable {
+public class PlayerDAO {
 
     public int playerID;
     public double[] playerColor = new double[4];
@@ -20,6 +18,12 @@ public class PlayerDAO implements Serializable {
 
     public WeaponDAO weapon;
 
+
+    /**
+     * Used by Gson when loading
+     */
+    public PlayerDAO() {
+    }
 
     public PlayerDAO(Player player) {
         playerID = player.getPlayerID();

@@ -1,6 +1,5 @@
 package com.rominntrenger.stateHandling;
 
-
 import com.rominntrenger.main.RomInntrenger;
 import com.rominntrenger.messageHandling.MessageHandler;
 import com.rominntrenger.objects.WaveManager;
@@ -9,39 +8,24 @@ import com.rominntrenger.stateHandling.DAO.MetaDAO;
 import com.rominntrenger.stateHandling.DAO.PlayerDAO;
 import com.rominntrenger.stateHandling.DAO.WaveManagerDAO;
 
-import java.io.*;
+import java.io.UncheckedIOException;
 
 public class SaveStateSaver {
 
-
-    private static void savePlayer(Player p, MetaDAO meta) {
-        meta.players.add(new PlayerDAO(p));
-    }
-
-    private static void saveWaveManager(WaveManager wm, MetaDAO meta) {
-        meta.waveManager = new WaveManagerDAO(wm);
-    }
-
     public static void save(RomInntrenger rom) {
-
         MetaDAO meta = new MetaDAO();
         for (Player p : rom.players) {
-            savePlayer(p, meta);
+            meta.players.add(new PlayerDAO(p));
         }
+        meta.waveManager = new WaveManagerDAO(WaveManager.getInstance());
 
-        saveWaveManager(WaveManager.getInstance(), meta);
-
-        try (ObjectOutputStream oos = new ObjectOutputStream(
-            new FileOutputStream(new File("./myFile.data")))) {
-            oos.writeObject(meta);
+        try {
+            SaveFile.write(meta, SaveFile.DEFAULT);
             MessageHandler.getInstance().writeMessage("Save complete");
-        } catch (FileNotFoundException e) {
+        } catch (UncheckedIOException e) {
             e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            MessageHandler.getInstance().writeMessage("Could not save the game");
         }
-
-
     }
 
 }
