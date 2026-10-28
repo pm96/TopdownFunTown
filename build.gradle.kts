@@ -30,12 +30,10 @@ sourceSets {
     main {
         java {
             setSrcDirs(listOf("src"))
-            // An old test that no longer compiles
-            exclude("test/**", "main/**")
         }
         resources {
             setSrcDirs(listOf("src", "assets"))
-            exclude("**/*.java", "test/**", "main/**", "META-INF/**")
+            exclude("**/*.java")
         }
     }
 }

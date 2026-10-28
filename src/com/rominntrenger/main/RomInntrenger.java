@@ -79,6 +79,7 @@ public class RomInntrenger extends GameApplication {
     public void start(Stage primaryStage) {
         loadSettings();
         this.primaryStage = primaryStage;
+        primaryStage.setTitle(GameSettings.getString("window_title"));
 
         Pane root = new Pane();
         root.setPrefSize(1920, 1080);
