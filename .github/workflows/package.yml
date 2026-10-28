@@ -1,0 +1,63 @@
+name: Package
+
+# Builds the game with its own Java runtime for Windows, macOS (Apple Silicon) and Linux.
+# Run it from the Actions tab, or push a tag like v1.0.0 to also publish a GitHub release.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Package
+        run: ./gradlew jpackage
+
+      # Archived before upload, since uploaded artifacts lose the executable permission
+      - name: Archive (Linux and macOS)
+        if: runner.os != 'Windows'
+        run: tar -czf RomInntrengere-${{ matrix.name }}.tar.gz -C build/jpackage .
+
+      - name: Archive (Windows)
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path build/jpackage/* -DestinationPath RomInntrengere-${{ matrix.name }}.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RomInntrengere-${{ matrix.name }}
+          path: RomInntrengere-${{ matrix.name }}.*
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: RomInntrengere-*

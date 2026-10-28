@@ -32,7 +32,18 @@ You only need JDK 21. Gradle and JavaFX are downloaded automatically:
 Run the tests with `./gradlew test`, or build and test everything with `./gradlew build`. GitHub
 Actions runs `./gradlew build` on every push and pull request.
 
-On Windows, use `gradlew.bat run`. To open the project in IntelliJ IDEA, open the folder and let
+On Windows, use `gradlew.bat run`.
+
+### Sharing the game
+
+`./gradlew jpackage` builds the game with its own Java runtime in `build/jpackage`, for the
+operating system you run it on. The folder can be zipped and shared, and players don't need Java.
+Add `-PinstallerType=msi`, `dmg`, `deb` or `rpm` for an installer instead.
+
+The **Package** workflow in GitHub Actions builds it for Windows, macOS (Apple Silicon) and Linux.
+Start it from the Actions tab and download the results, or push a tag like `v1.0.0` to publish
+them as a GitHub release. The macOS build isn't signed, so the first time, right-click the app and
+choose Open. To open the project in IntelliJ IDEA, open the folder and let
 it import the Gradle build.
 
 If no audio device is available, the game runs without sound. Without a gamepad, the game uses
