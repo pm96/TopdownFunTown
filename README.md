@@ -14,7 +14,6 @@ players can play together using gamepads.
 | `src/com/rominntrenger/main/RomInntrenger.java` | Entry point (`main` class) |
 | `assets/` | Sprites, audio, fonts, `weaponComponents.json` and `settings/Default.json` (game balance and screen settings) |
 | `assets/sprite/maps/` | Levels. Each pixel colour maps to a tile or object, see `uml/HexValueList` |
-| `lib/jinput/` | JInput for gamepad support, with its native libraries. Other libraries come from Maven Central via Gradle |
 | `org/`, `uml/` | PlantUML diagrams and the IntelliJ code style |
 
 The engine runs everything on the JavaFX application thread. Each frame, `GameEngine` runs game
@@ -32,8 +31,8 @@ You only need JDK 21. Gradle and JavaFX are downloaded automatically:
 On Windows, use `gradlew.bat run`. To open the project in IntelliJ IDEA, open the folder and let
 it import the Gradle build.
 
-If no audio device is available, the game runs without sound. If no gamepad is found (or
-`/dev/input` can't be read on Linux), it falls back to keyboard and mouse.
+If no audio device is available, the game runs without sound. Without a gamepad, the game uses
+keyboard and mouse.
 
 ## Controls
 
@@ -51,5 +50,7 @@ If no audio device is available, the game runs without sound. If no gamepad is f
 | `F2` | Freeze/unfreeze the game |
 
 The game also saves automatically at the start of each new wave. Saves are JSON files in
-`.rominntrengere/save.json` in your home folder. With gamepads connected, each
-gamepad controls one player: left stick moves and right stick aims.
+`.rominntrengere/save.json` in your home folder. With gamepads connected when the
+game starts, each gamepad (up to four) controls one player: left stick moves, right stick aims,
+right trigger or right bumper shoots and B reloads. Gamepads are read with
+[Jamepad](https://github.com/libgdx/Jamepad), so most PlayStation, Xbox and Switch controllers work.

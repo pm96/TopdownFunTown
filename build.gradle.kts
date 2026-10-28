@@ -20,8 +20,8 @@ javafx {
 
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
-    // JInput (gamepads) is checked in with its native libraries, see lib/jinput
-    implementation(files("lib/jinput/jinput-2.0.7.jar", "lib/jinput/jutils-1.0.0.jar"))
+    // Gamepads, through SDL. Includes native libraries for Windows, macOS and Linux
+    implementation("com.badlogicgames.jamepad:jamepad:2.30.0.0")
 }
 
 // The project predates Gradle, so it keeps its original layout:
@@ -44,10 +44,4 @@ tasks.withType<JavaCompile> {
 
 application {
     mainClass = "com.rominntrenger.main.RomInntrenger"
-    applicationDefaultJvmArgs = listOf("-Djava.library.path=lib/jinput")
-}
-
-tasks.named<JavaExec>("run") {
-    // Saves (myFile.data) and the JInput natives are relative to the repository root
-    workingDir = rootDir
 }

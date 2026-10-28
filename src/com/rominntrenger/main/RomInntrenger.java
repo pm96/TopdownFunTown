@@ -343,6 +343,14 @@ public class RomInntrenger extends GameApplication {
 
     }
 
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        if (gi != null) {
+            gi.close();
+        }
+    }
+
     public CopyOnWriteArrayList<Player> getPlayers() {
         return players;
     }
