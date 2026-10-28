@@ -42,15 +42,11 @@ public class CanvasRenderer {
     }
 
     public void addCollider(Collider col) {
-        synchronized (colliderDebugDrawables) {
-            colliderDebugDrawables.add(col);
-        }
+        colliderDebugDrawables.add(col);
     }
 
     public void removeCollider(Collider col) {
-        synchronized (colliderDebugDrawables) {
-            colliderDebugDrawables.remove(col);
-        }
+        colliderDebugDrawables.remove(col);
     }
 
     /**
@@ -60,9 +56,7 @@ public class CanvasRenderer {
      * @param in Object to be drawn on canvas
      */
     public void addGameObject(GameObject in) {
-//        synchronized (this) {
         layers[RenderLayer.RenderLayerName.LOW_BLOCKS.getValue()].addGameObject(in);
-//        }
     }
 
     /**
@@ -72,19 +66,15 @@ public class CanvasRenderer {
      * @param layer RenderLayer to be used
      */
     private void addGameObject(GameObject in, RenderLayer.RenderLayerName layer) {
-//        synchronized (this) {
         layers[layer.getValue()].addGameObject(in);
-//        }
     }
 
     /**
      * Will move gameobject to designated renderlayer
      */
     public void moveGameObjectToLayer(GameObject go, RenderLayer.RenderLayerName layer) {
-//        synchronized (this) {
         removeGameObject(go);
         addGameObject(go, layer);
-//        }
     }
 
     /**
@@ -94,13 +84,11 @@ public class CanvasRenderer {
      * @return {@link com.bluebook.renderer.RenderLayer.RenderLayerName} that contains GO
      */
     public RenderLayer.RenderLayerName getLayer(GameObject go) {
-//        synchronized (this) {
         for (int i = 0; i < layers.length; i++) {
             if (layers[i].hasGameObject(go)) {
                 return RenderLayer.RenderLayerName.get(i);
             }
         }
-//        }
         return null;
     }
 
@@ -130,7 +118,6 @@ public class CanvasRenderer {
      * Draw all objects onto canvas
      */
     public void drawAll() {
-//        synchronized (this) {
         GraphicsContext gc = canvas.getGraphicsContext2D();
 
         gc.save();
@@ -153,10 +140,8 @@ public class CanvasRenderer {
 
 
         if (GameEngine.DEBUG) {
-            synchronized (colliderDebugDrawables) {
-                for (Collider c : colliderDebugDrawables) {
-                    c.debugDraw(gc);
-                }
+            for (Collider c : colliderDebugDrawables) {
+                c.debugDraw(gc);
             }
             flg.addFPS(GameEngine.getInstance().draw_FPS);
             flg.draw(gc);
@@ -168,7 +153,6 @@ public class CanvasRenderer {
             gc.restore();
         }
 
-//        }
 
     }
 

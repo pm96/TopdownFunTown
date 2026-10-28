@@ -85,22 +85,20 @@ public class QuadTree {
      * @param col {@link Collider} to be inserted into the {@link QuadTree}
      */
     public void insert(Collider col) {
-        synchronized (this) {
-            Vec2 goLocPos = col.getPosition();
+        Vec2 goLocPos = col.getPosition();
 
-            if (boundary.intersects(goLocPos.getX(), goLocPos.getY(), 6, 6)) {
-                if (isSubdivided) {
-                    children[QuadChildren.NORTHWEST.value].insert(col);
-                    children[QuadChildren.NORTHEAST.value].insert(col);
-                    children[QuadChildren.SOUTHWEST.value].insert(col);
-                    children[QuadChildren.SOUTHEAST.value].insert(col);
+        if (boundary.intersects(goLocPos.getX(), goLocPos.getY(), 6, 6)) {
+            if (isSubdivided) {
+                children[QuadChildren.NORTHWEST.value].insert(col);
+                children[QuadChildren.NORTHEAST.value].insert(col);
+                children[QuadChildren.SOUTHWEST.value].insert(col);
+                children[QuadChildren.SOUTHEAST.value].insert(col);
+            } else {
+                if (colliders.size() + 1 <= capacity) {
+                    colliders.add(col);
                 } else {
-                    if (colliders.size() + 1 <= capacity) {
-                        colliders.add(col);
-                    } else {
-                        subdivided();
-                        insert(col);
-                    }
+                    subdivided();
+                    insert(col);
                 }
             }
         }
@@ -191,39 +189,37 @@ public class QuadTree {
      * If debug is on, this will draw the quadmap. Used for debugging physics and collision
      */
     public void draw(GraphicsContext gc) {
-        synchronized (this) {
-            if (HitDetectionHandler.USE_QUADTREE) {
-                if (isSubdivided) {
-                    if (children[QuadChildren.NORTHWEST.value] != null) {
-                        children[QuadChildren.NORTHWEST.value].draw(gc);
-                    }
-                    if (children[QuadChildren.NORTHEAST.value] != null) {
-                        children[QuadChildren.NORTHEAST.value].draw(gc);
-                    }
-                    if (children[QuadChildren.SOUTHWEST.value] != null) {
-                        children[QuadChildren.SOUTHWEST.value].draw(gc);
-                    }
-                    if (children[QuadChildren.SOUTHEAST.value] != null) {
-                        children[QuadChildren.SOUTHEAST.value].draw(gc);
-                    }
+        if (HitDetectionHandler.USE_QUADTREE) {
+            if (isSubdivided) {
+                if (children[QuadChildren.NORTHWEST.value] != null) {
+                    children[QuadChildren.NORTHWEST.value].draw(gc);
                 }
-
-                if (OrthographicCamera.main != null) {
-                    gc.setLineWidth(3);
-                    gc.setStroke(Color.BLACK);
-                    //gc.setLineDashes(2, 7, 2, 8);
-                    Vec2 camOff = OrthographicCamera.getOffset();
-                    double x = boundary.getX() + camOff.getX();
-                    double y = boundary.getY() + camOff.getY();
-                    double w = boundary.getWidth();
-                    double h = boundary.getHeight();
-                    gc.strokeLine(x, y, x + w, y);
-                    gc.strokeLine(x, y, x, y + h);
-                    gc.strokeLine(x, y + h, x + w, y + h);
-                    gc.strokeLine(x + w, y, x + w, y + h);
-                    gc.setFill(Color.WHITE);
-
+                if (children[QuadChildren.NORTHEAST.value] != null) {
+                    children[QuadChildren.NORTHEAST.value].draw(gc);
                 }
+                if (children[QuadChildren.SOUTHWEST.value] != null) {
+                    children[QuadChildren.SOUTHWEST.value].draw(gc);
+                }
+                if (children[QuadChildren.SOUTHEAST.value] != null) {
+                    children[QuadChildren.SOUTHEAST.value].draw(gc);
+                }
+            }
+
+            if (OrthographicCamera.main != null) {
+                gc.setLineWidth(3);
+                gc.setStroke(Color.BLACK);
+                //gc.setLineDashes(2, 7, 2, 8);
+                Vec2 camOff = OrthographicCamera.getOffset();
+                double x = boundary.getX() + camOff.getX();
+                double y = boundary.getY() + camOff.getY();
+                double w = boundary.getWidth();
+                double h = boundary.getHeight();
+                gc.strokeLine(x, y, x + w, y);
+                gc.strokeLine(x, y, x, y + h);
+                gc.strokeLine(x, y + h, x + w, y + h);
+                gc.strokeLine(x + w, y, x + w, y + h);
+                gc.setFill(Color.WHITE);
+
             }
         }
     }

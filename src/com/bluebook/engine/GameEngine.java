@@ -1,8 +1,7 @@
 package com.bluebook.engine;
 
-import com.bluebook.physics.CollisionThread;
+import com.bluebook.physics.HitDetectionHandler;
 import com.bluebook.renderer.CanvasRenderer;
-import com.bluebook.threads.UpdateThread;
 import com.bluebook.util.GameObject;
 import javafx.animation.AnimationTimer;
 import javafx.scene.canvas.Canvas;
@@ -11,12 +10,35 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * This class is the main engine of the gamePane
+ * <p>
+ * Everything runs in one game loop on the JavaFX application thread: each frame runs game logic
+ * and then collisions and lighting in fixed time steps, then draws. Input events and menus are also handled on
+ * this thread, so game objects never need to be shared between threads.
  */
 public class GameEngine {
 
-    private UpdateThread updateThread;
-    private CollisionThread collisionThread;
+    /**
+     * Game logic and collisions always run in steps of this many seconds (60 per second), no
+     * matter how fast the screen is drawn, so fast objects can't skip through walls on slow
+     * machines
+     */
+    private static final double TIME_STEP = 1.0 / 60.0;
 
+    /**
+     * Most steps to simulate in one frame, so the game slows down instead of freezing when a
+     * machine can't keep up
+     */
+    private static final int MAX_STEPS_PER_FRAME = 5;
+
+    /**
+     * Time that has passed but not been simulated yet
+     */
+    private double unsimulatedTime = 0;
+
+    /**
+     * Objects may be created or destroyed while the list is updated, the copy on write list
+     * makes iterating safe while that happens
+     */
     private CopyOnWriteArrayList<GameObject> updateObjects = new CopyOnWriteArrayList<>();
 
     private final long[] frameTimes = new long[100];
@@ -30,26 +52,26 @@ public class GameEngine {
 
     private boolean isPaused = true;
 
+    /**
+     * Timestamp of the previous simulated frame, 0 if the next frame is the first after a pause
+     */
+    private long previousFrameNanos = 0;
+
     private static GameEngine singleton;
 
     /**
-     * Used by drawThread to update draw_FPS, this will be drawn on screen in DEBUG_MODE triggered by {@link GameEngine#DEBUG} and drawn in {@link com.bluebook.renderer.FPSLineGraph}
+     * Frames per second of the game loop, this will be drawn on screen in DEBUG_MODE triggered by {@link GameEngine#DEBUG} and drawn in {@link com.bluebook.renderer.FPSLineGraph}
      */
     public double draw_FPS = 0.0;
 
     /**
-     * Used by {@link CollisionThread} to update collision_FPS, this will be drawn on screen in DEBUG_MODE triggered by {@link GameEngine#DEBUG} and drawn in {@link com.bluebook.renderer.FPSLineGraph}
+     * Milliseconds spent on logic and collisions in the last frame, shown in DEBUG_MODE
      */
-    public double collision_FPS = 0.0;
-
-    /**
-     * Used by {@link UpdateThread} to update draw_FPS, this will be drawn on screen in DEBUG_MODE triggered by {@link GameEngine#DEBUG} and drawn in {@link com.bluebook.renderer.FPSLineGraph}
-     */
-    public double update_FPS = 0.0;
+    public double update_ms = 0.0;
 
     private Canvas canvas;
 
-    private AnimationTimer drawTimer;
+    private AnimationTimer gameLoop;
 
     /**
      * Constructor for GameEngine
@@ -62,16 +84,34 @@ public class GameEngine {
 
         this.canvas = canvas;
 
-        updateThread = new UpdateThread(this);
-        collisionThread = new CollisionThread();
-        startAnimationTimer();
-
+        startGameLoop();
     }
 
-    protected void startAnimationTimer() {
-        drawTimer = new AnimationTimer() {
+    protected void startGameLoop() {
+        gameLoop = new AnimationTimer() {
             @Override
             public void handle(long now) {
+                if (!isPaused) {
+                    long start = System.nanoTime();
+                    if (previousFrameNanos != 0) {
+                        unsimulatedTime += (now - previousFrameNanos) / 1_000_000_000.0;
+                    }
+                    previousFrameNanos = now;
+
+                    int steps = 0;
+                    while (unsimulatedTime >= TIME_STEP && steps < MAX_STEPS_PER_FRAME
+                        && !isPaused) {
+                        update(TIME_STEP);
+                        HitDetectionHandler.getInstance().update();
+                        unsimulatedTime -= TIME_STEP;
+                        steps++;
+                    }
+                    if (steps == MAX_STEPS_PER_FRAME) {
+                        unsimulatedTime = 0;
+                    }
+                    update_ms = (System.nanoTime() - start) / 1_000_000.0;
+                }
+
                 CanvasRenderer.getInstance().drawAll();
 
                 // Finding FSP for debugging
@@ -88,55 +128,24 @@ public class GameEngine {
                 }
             }
         };
-        drawTimer.start();
+        gameLoop.start();
     }
 
     /**
-     * Will terminate the {@link UpdateThread} and {@link CollisionThread}
-     * but the drawTimer will still be called
+     * Stops game logic and collisions, the screen is still drawn
      */
     public void pauseGame() {
-        if (!isPaused) {
-            new Thread(() -> {
-                isPaused = true;
-                stopUpdateThread();
-                stopCollisionThread();
-                //        drawTimer.stop();
-
-
-            }).start();
-
-        }
+        isPaused = true;
     }
 
     /**
-     * Will resume the {@link UpdateThread} and {@link CollisionThread}
-     * But will do so via a third thread created in this function, this is due to the possebility that
-     * UpdateThread will pause this to do some changes and then resume.
-     * This will not let UpdateThread go a full cycle, so it will not terminate.
-     * Resulting in parlell duplicates of {@link UpdateThread}
+     * Resumes game logic and collisions
      */
     public void resumeGame() {
         if (isPaused) {
-            /*
-             * If UpdateThread calls pauseGame() and then resumeGame(), it will be duplicated and run in parralell
-             * Therefore we must create a seprate thread to reinstate it. With a dealy, to let it die in a safe manner.
-             *
-             */
-            Thread t = new Thread(() -> {
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                isPaused = false;
-                startUpdateThread();
-                startCollisionThread();
-                //        drawTimer.start();
-            });
-            t.setName("Thread restart thread");
-            t.setDaemon(true);
-            t.start();
+            isPaused = false;
+            previousFrameNanos = 0;
+            unsimulatedTime = 0;
         }
     }
 
@@ -159,66 +168,26 @@ public class GameEngine {
     /**
      * This is used by the constructor of gameobject so it's update function is called
      */
-    public synchronized void addGameObject(GameObject go) {
+    public void addGameObject(GameObject go) {
         updateObjects.add(go);
     }
 
     /**
      * Removes the object from updateobjects, this is called during an gameobjects destruction
      */
-    public synchronized void removeGameObject(GameObject go) {
+    public void removeGameObject(GameObject go) {
         updateObjects.remove(go);
     }
 
     /**
-     * This should be called every tick from the {@link UpdateThread}
+     * This is called every frame from the game loop
      */
     public void update(double delta) {
-        synchronized (this) {
-            GameApplication.getInstance().update(delta);
-            GameObject[] updateGameObjects = new GameObject[updateObjects.size()];
-            updateObjects.toArray(updateGameObjects);
-            for (GameObject updateGameObject : updateGameObjects) {
-                if (updateGameObject != null && updateGameObject.isAlive()) {
-                    updateGameObject.update(delta);
-                }
+        GameApplication.getInstance().update(delta);
+        for (GameObject updateGameObject : updateObjects) {
+            if (updateGameObject.isAlive()) {
+                updateGameObject.update(delta);
             }
-        }
-    }
-
-    /**
-     * Will start the update thread that runs concurrently to process logic
-     */
-    public void startUpdateThread() {
-        if (!updateThread.isRunning()) {
-            Thread t = new Thread(updateThread);
-            t.setName("Update Thread");
-            t.setDaemon(true);
-            t.start();
-        }
-    }
-
-    /**
-     * Will terminate logic thread
-     */
-    private void stopUpdateThread() {
-        if (updateThread.isRunning()) {
-            updateThread.terminate();
-        }
-    }
-
-    public void startCollisionThread() {
-        if (!collisionThread.isRunning()) {
-            Thread t = new Thread(collisionThread);
-            t.setName("Collision Thread");
-            t.setDaemon(true);
-            t.start();
-        }
-    }
-
-    private void stopCollisionThread() {
-        if (collisionThread.isRunning()) {
-            collisionThread.terminate();
         }
     }
 }

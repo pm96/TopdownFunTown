@@ -87,7 +87,6 @@ public class Menu extends Parent {
                     ft.play();
                     try {
                         GameApplication.getInstance().callGame(primaryStage);
-                        GameEngine.getInstance().pauseGame();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

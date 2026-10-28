@@ -4,7 +4,7 @@ import com.bluebook.physics.listeners.OnCollisionListener;
 import com.bluebook.renderer.CanvasRenderer;
 import com.bluebook.util.GameObject;
 import com.bluebook.util.Vec2;
-import com.sun.javafx.geom.Line2D;
+import java.awt.geom.Line2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.shape.*;
 
@@ -90,7 +90,7 @@ public abstract class Collider {
 
     public abstract boolean instersects(Collider other);
 
-    abstract Line2D[] getLines();
+    abstract Line2D.Float[] getLines();
 
     public void destroy() {
         CanvasRenderer.getInstance().removeCollider(this);
@@ -180,7 +180,7 @@ public abstract class Collider {
     }
 
     /**
-     * If there was a collision on last {@link CollisionThread} update, the collided collider will be
+     * If there was a collision in the last frame, the collided collider will be
      * retrivable here. If this returns null, no collision has occured.
      */
     public Collider getIntersectionCollider() {

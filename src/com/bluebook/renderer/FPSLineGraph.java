@@ -67,12 +67,10 @@ public class FPSLineGraph {
         gc.setFill(new Color(0.6, 0.6, 0.6, 0.6));
         gc.fillRect(X, Y + height / 2, 400, height);
         gc.setFill(Color.BLACK);
-        gc.fillText("Draw_FPS: " + GameEngine.getInstance().draw_FPS, X, Y + height);
-        gc.fillText("Col_FPS: " + GameEngine.getInstance().collision_FPS, X, Y + height + 20);
+        gc.fillText("FPS: " + GameEngine.getInstance().draw_FPS, X, Y + height);
+        gc.fillText("Update ms: " + GameEngine.getInstance().update_ms, X, Y + height + 20);
         gc.fillText("    Col_num:" + HitDetectionHandler.getInstance().colliders.size(), X,
             Y + height + 40);
-
-        gc.fillText("Update_FPS: " + GameEngine.getInstance().update_FPS, X, Y + height + 100);
 
     }
 

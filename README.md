@@ -9,42 +9,31 @@ players can play together using gamepads.
 
 | Path | Contents |
 | --- | --- |
-| `src/com/bluebook` | **BlueBook**, our own small game engine: game loop, rendering, physics (quadtree, colliders, rigid bodies, 2D lighting), camera, audio and input |
+| `src/com/bluebook` | **BlueBook**, our own small game engine: game loop (`engine/GameEngine`), rendering, physics (quadtree, colliders, rigid bodies, 2D lighting), camera, audio and input |
 | `src/com/rominntrenger` | The game itself: player, enemies (FSM AI), weapons, items, waves, menus and save states |
 | `src/com/rominntrenger/main/RomInntrenger.java` | Entry point (`main` class) |
 | `assets/` | Sprites, audio, fonts, `weaponComponents.json` and `settings/Default.json` (game balance and screen settings) |
 | `assets/sprite/maps/` | Levels. Each pixel colour maps to a tile or object, see `uml/HexValueList` |
-| `lib/` | Gson and JInput (gamepad support, including native libraries) |
+| `lib/` | JInput (gamepad support, including native libraries). Gson now comes from Maven Central via Gradle |
 | `org/`, `uml/` | PlantUML diagrams and the IntelliJ code style |
 
 `src/com/bluebook/OpenGL` is an unfinished LWJGL experiment. It is not used by the game and is
 excluded from the build.
 
+The engine runs everything on the JavaFX application thread. Each frame, `GameEngine` runs game
+logic and then collisions and lighting in fixed steps of 1/60 second (several steps if the screen
+is drawn slower than that), and then draws the frame.
+
 ## Running the game
 
-You need a JDK (11 or newer, tested with 21) and the [OpenJFX SDK](https://gluonhq.com/products/javafx/)
-for the same version. Set `JAVAFX` to the SDK's `lib` folder, then run from the repository root:
+You only need JDK 21. Gradle and JavaFX are downloaded automatically:
 
 ```sh
-JAVAFX=/path/to/javafx-sdk/lib
-CP="lib/gson-2.8.2.jar:lib/jinput/jinput-2.0.7.jar:lib/jutils-1.0.0.jar"
-FX="--module-path $JAVAFX --add-modules javafx.controls,javafx.fxml
-    --add-exports javafx.graphics/com.sun.javafx.geom=ALL-UNNAMED"
-
-# Compile
-mkdir -p out
-find src/com -name '*.java' -not -path '*/OpenGL/*' > out/sources.txt
-javac -encoding UTF-8 -d out $FX -cp "$CP" @out/sources.txt
-
-# Run
-java $FX -cp "out:src:assets:$CP" -Djava.library.path=lib/jinput com.rominntrenger.main.RomInntrenger
+./gradlew run
 ```
 
-On Windows, use `;` instead of `:` as the classpath separator.
-
-The `--add-exports` flag is needed because the physics code uses JavaFX's internal
-`com.sun.javafx.geom.Line2D`. `src` is on the classpath for the FXML file, and `assets` for sprites,
-audio and settings.
+On Windows, use `gradlew.bat run`. To open the project in IntelliJ IDEA, open the folder and let
+it import the Gradle build.
 
 If no audio device is available, the game runs without sound. If no gamepad is found (or
 `/dev/input` can't be read on Linux), it falls back to keyboard and mouse.
@@ -61,6 +50,8 @@ If no audio device is available, the game runs without sound. If no gamepad is f
 | `P` | Restart from the last save after you die |
 | `Up` / `Down` | Save / load the game (`./myFile.data`) |
 | `F` | Leave fullscreen |
+| `F1` | Toggle debug view (colliders, quadtree, FPS) |
+| `F2` | Freeze/unfreeze the game |
 
 The game also saves automatically at the start of each new wave. With gamepads connected, each
 gamepad controls one player: left stick moves and right stick aims.
