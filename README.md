@@ -12,6 +12,7 @@ players can play together using gamepads.
 | `src/com/bluebook` | **BlueBook**, our own small game engine: game loop (`engine/GameEngine`), rendering, physics (quadtree, colliders, rigid bodies, 2D lighting), camera, audio and input |
 | `src/com/rominntrenger` | The game itself: player, enemies (FSM AI), weapons, items, waves, menus and save states |
 | `src/com/rominntrenger/main/RomInntrenger.java` | Entry point (`main` class) |
+| `test/`, `test-resources/` | Unit tests (JUnit 5) |
 | `assets/` | Sprites, audio, fonts, `weaponComponents.json` and `settings/Default.json` (game balance and screen settings) |
 | `assets/sprite/maps/` | Levels. Each pixel colour maps to a tile or object, see `uml/HexValueList` |
 | `org/`, `uml/` | PlantUML diagrams and the IntelliJ code style |
@@ -27,6 +28,9 @@ You only need JDK 21. Gradle and JavaFX are downloaded automatically:
 ```sh
 ./gradlew run
 ```
+
+Run the tests with `./gradlew test`, or build and test everything with `./gradlew build`. GitHub
+Actions runs `./gradlew build` on every push and pull request.
 
 On Windows, use `gradlew.bat run`. To open the project in IntelliJ IDEA, open the folder and let
 it import the Gradle build.

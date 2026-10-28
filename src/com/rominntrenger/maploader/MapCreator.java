@@ -138,57 +138,24 @@ public class MapCreator extends GameObject {
     }
 
     /**
-     * Covers the walls with as few rectangles as possible, and gives each rectangle one collider.
-     * Each row of walls is stretched as far right as it goes, then as far down as the whole row
-     * allows
+     * Gives each rectangle of walls one collider, see {@link WallRectangles}
      */
     private void createWallColliders() {
-        int width = currentLevel.length;
-        int height = currentLevel[0].length;
-        boolean[][] covered = new boolean[width][height];
+        boolean[][] walls = new boolean[currentLevel.length][currentLevel[0].length];
+        for (int i = 0; i < walls.length; i++) {
+            for (int j = 0; j < walls[i].length; j++) {
+                walls[i][j] = currentLevel[i][j] == ID.Wall;
+            }
+        }
+
         Vec2 squareSize = GameSettings.getSquareScale();
-
-        for (int j = 0; j < height; j++) {
-            for (int i = 0; i < width; i++) {
-                if (!isUncoveredWall(i, j, covered)) {
-                    continue;
-                }
-
-                int right = i;
-                while (right + 1 < width && isUncoveredWall(right + 1, j, covered)) {
-                    right++;
-                }
-
-                int bottom = j;
-                while (bottom + 1 < height && isRowOfUncoveredWalls(i, right, bottom + 1, covered)) {
-                    bottom++;
-                }
-
-                for (int x = i; x <= right; x++) {
-                    for (int y = j; y <= bottom; y++) {
-                        covered[x][y] = true;
-                    }
-                }
-
-                // Tile positions are tile centers, so the rectangle's center is between the first
-                // and last tile
-                Vec2 center = Vec2.multiply(new Vec2((i + right) / 2.0, (j + bottom) / 2.0), squareSize);
-                new WallCollider(center, right - i + 1, bottom - j + 1);
-            }
+        for (WallRectangles.Rect r : WallRectangles.find(walls)) {
+            // Tile positions are tile centers, so the rectangle's center is between the first and
+            // last tile
+            Vec2 center = Vec2.multiply(
+                new Vec2((r.left() + r.right()) / 2.0, (r.top() + r.bottom()) / 2.0), squareSize);
+            new WallCollider(center, r.width(), r.height());
         }
-    }
-
-    private boolean isUncoveredWall(int x, int y, boolean[][] covered) {
-        return currentLevel[x][y] == ID.Wall && !covered[x][y];
-    }
-
-    private boolean isRowOfUncoveredWalls(int left, int right, int y, boolean[][] covered) {
-        for (int x = left; x <= right; x++) {
-            if (!isUncoveredWall(x, y, covered)) {
-                return false;
-            }
-        }
-        return true;
     }
 
 }
