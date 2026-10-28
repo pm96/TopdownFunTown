@@ -223,6 +223,50 @@ public class BoxCollider extends Collider {
         return rect;
     }
 
+    /**
+     * Closest point on the rectangle, so objects are pushed straight out of the nearest side even
+     * when the rectangle is a long wall
+     */
+    @Override
+    public Vec2 getClosestPoint(Vec2 point) {
+        if (rect.getRotate() != 0) {
+            return super.getClosestPoint(point);
+        }
+        double x = Math.max(rect.getX(), Math.min(point.getX(), rect.getX() + rect.getWidth()));
+        double y = Math.max(rect.getY(), Math.min(point.getY(), rect.getY() + rect.getHeight()));
+        return new Vec2(x, y);
+    }
+
+    /**
+     * Pushes out through the nearest side. Pushing away from the center would move an object
+     * along a long wall instead of out of it
+     */
+    @Override
+    public Vec2 getPushDirection(Vec2 point) {
+        if (rect.getRotate() != 0) {
+            return super.getPushDirection(point);
+        }
+        double left = point.getX() - rect.getX();
+        double right = rect.getX() + rect.getWidth() - point.getX();
+        double top = point.getY() - rect.getY();
+        double bottom = rect.getY() + rect.getHeight() - point.getY();
+
+        if (left < 0 || right < 0 || top < 0 || bottom < 0) {
+            // Outside the rectangle
+            return super.getPushDirection(point);
+        }
+
+        double nearest = Math.min(Math.min(left, right), Math.min(top, bottom));
+        if (nearest == left) {
+            return Vec2.LEFT;
+        } else if (nearest == right) {
+            return Vec2.RIGHT;
+        } else if (nearest == top) {
+            return Vec2.UP;
+        }
+        return Vec2.DOWN;
+    }
+
     @Override
     public boolean instersects(Collider other) {
         if (other instanceof BoxCollider) {

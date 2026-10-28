@@ -283,9 +283,7 @@ public class Player extends GameObject {
             transform.setLocalPosition(
                 Vec2.add(
                     transform.getLocalPosition(),
-                    Vec2.multiply(Vec2.subtract(getTransform().getGlobalPosition(),
-                        hit.getGameObject().getTransform().getGlobalPosition())
-                        .getNormalizedVector(), 0.5)));
+                    Vec2.multiply(hit.getPushDirection(getPosition()), 0.5)));
 
         }
     }

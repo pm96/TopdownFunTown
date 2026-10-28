@@ -98,7 +98,7 @@ public class CircleCollider extends Collider {
 
     @Override
     public Rectangle getBoudningBox() {
-        return new Rectangle(position.getX() - radius, position.getY() - radius, radius, radius);
+        return new Rectangle(position.getX() - radius, position.getY() - radius, radius * 2, radius * 2);
     }
 
     @Override

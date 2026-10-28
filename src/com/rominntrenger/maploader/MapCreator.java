@@ -10,6 +10,7 @@ import com.bluebook.util.Vec2;
 import com.rominntrenger.objects.AlienHive;
 import com.rominntrenger.objects.PlayerSpawn;
 import com.rominntrenger.objects.blocks.Wall;
+import com.rominntrenger.objects.blocks.WallCollider;
 import com.rominntrenger.objects.enemy.AlienExplode;
 import com.rominntrenger.objects.enemy.AlienGreen;
 import com.rominntrenger.objects.enemy.AlienPurple;
@@ -132,6 +133,62 @@ public class MapCreator extends GameObject {
 
             }
         }
+
+        createWallColliders();
+    }
+
+    /**
+     * Covers the walls with as few rectangles as possible, and gives each rectangle one collider.
+     * Each row of walls is stretched as far right as it goes, then as far down as the whole row
+     * allows
+     */
+    private void createWallColliders() {
+        int width = currentLevel.length;
+        int height = currentLevel[0].length;
+        boolean[][] covered = new boolean[width][height];
+        Vec2 squareSize = GameSettings.getSquareScale();
+
+        for (int j = 0; j < height; j++) {
+            for (int i = 0; i < width; i++) {
+                if (!isUncoveredWall(i, j, covered)) {
+                    continue;
+                }
+
+                int right = i;
+                while (right + 1 < width && isUncoveredWall(right + 1, j, covered)) {
+                    right++;
+                }
+
+                int bottom = j;
+                while (bottom + 1 < height && isRowOfUncoveredWalls(i, right, bottom + 1, covered)) {
+                    bottom++;
+                }
+
+                for (int x = i; x <= right; x++) {
+                    for (int y = j; y <= bottom; y++) {
+                        covered[x][y] = true;
+                    }
+                }
+
+                // Tile positions are tile centers, so the rectangle's center is between the first
+                // and last tile
+                Vec2 center = Vec2.multiply(new Vec2((i + right) / 2.0, (j + bottom) / 2.0), squareSize);
+                new WallCollider(center, right - i + 1, bottom - j + 1);
+            }
+        }
+    }
+
+    private boolean isUncoveredWall(int x, int y, boolean[][] covered) {
+        return currentLevel[x][y] == ID.Wall && !covered[x][y];
+    }
+
+    private boolean isRowOfUncoveredWalls(int left, int right, int y, boolean[][] covered) {
+        for (int x = left; x <= right; x++) {
+            if (!isUncoveredWall(x, y, covered)) {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

@@ -72,6 +72,28 @@ public abstract class Collider {
 
     public abstract Rectangle getBoudningBox();
 
+    /**
+     * The point on this collider closest to the given position, used to push other objects out
+     * of it. By default the position of the attached {@link GameObject}
+     */
+    public Vec2 getClosestPoint(Vec2 point) {
+        return gameObject.getPosition();
+    }
+
+    /**
+     * Direction to push an object at the given position to get it out of this collider
+     *
+     * @return normalized vector pointing away from the nearest part of this collider
+     */
+    public Vec2 getPushDirection(Vec2 point) {
+        Vec2 away = Vec2.subtract(point, getClosestPoint(point));
+        if (away.getMagnitude() < 0.001) {
+            // The point is inside, fall back to pushing away from the center
+            away = Vec2.subtract(point, gameObject.getPosition());
+        }
+        return away.getNormalizedVector();
+    }
+
     public Vec2 getClosestPointOfIntersection() {
         Vec2 ret = new Vec2(0, 0);
         double maxDist = Double.MAX_VALUE;
